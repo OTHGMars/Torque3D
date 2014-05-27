@@ -140,6 +140,8 @@ SceneObject::SceneObject()
 
    mObjectFlags.set( RenderEnabledFlag | SelectionEnabledFlag );
    mIsScopeAlways = false;
+
+   mAttachedToObj = NULL;
 }
 
 //-----------------------------------------------------------------------------

@@ -767,6 +767,16 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
       static bool _setMountPID( void* object, const char* index, const char* data );
 
       /// @}
+
+   /// mAttachedToObj is how attachable classes identify themselves to objects that are
+   /// attached. Player classes need this notification so they won't warp their position
+   /// while attached. This value does not need networked. The attachable class is
+   /// responsible for setting it on the server and clients.
+   protected:
+      SceneObject *mAttachedToObj;
+   public:
+      SceneObject *getAttachedToObj() { return mAttachedToObj; }
+      void setAttachedToObj(SceneObject *obj) { mAttachedToObj = obj; }
 };
 
 #endif  // _SCENEOBJECT_H_
