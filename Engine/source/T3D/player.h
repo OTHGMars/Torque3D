@@ -615,8 +615,9 @@ protected:
    virtual void onUnmount( ShapeBase *obj, S32 node );
    virtual void unmount();
    /// @}
-
+public:
    void setPosition(const Point3F& pos,const Point3F& viewRot);
+protected:
    void setRenderPosition(const Point3F& pos,const Point3F& viewRot,F32 dt=-1);
    void _findContact( SceneObject **contactObject, VectorF *contactNormal, Vector<SceneObject*> *outOverlapObjects );
    void findContact( bool *run, bool *jump, VectorF *contactNormal );
@@ -764,6 +765,8 @@ public:
    virtual void prepRenderImage( SceneRenderState* state );
    virtual void renderConvex( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );   
    virtual void renderMountedImage( U32 imageSlot, TSRenderState &rstate, SceneRenderState *state );
+
+   void setDeltaRot(F32 dZ) { delta.rot.z = dZ; }
 };
 
 typedef Player::Pose PlayerPose;

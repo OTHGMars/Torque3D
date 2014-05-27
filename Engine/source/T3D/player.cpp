@@ -6079,6 +6079,11 @@ void Player::readPacketData(GameConnection *connection, BitStream *stream)
    stream->read(&mHead.z);
    stream->read(&rot.z);
    rot.x = rot.y = 0;
+   if ( mAttachedToObj )
+   {  // If we're attached to another object, it will update our position and rotation
+      pos = getPosition();
+      rot = delta.rot;
+   }
    setPosition(pos,rot);
    delta.head = mHead;
    delta.rot = rot;
@@ -6265,6 +6270,10 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
          F32 as = (speed + mVelocity.len()) * 0.5f * TickSec;
          F32 dt = (as > 0.00001f) ? delta.warpOffset.len() / as: sMaxWarpTicks;
          delta.warpTicks = (S32)((dt > sMinWarpTicks) ? getMax(mFloor(dt + 0.5f), 1.0f) : 0.0f);
+
+         // If we're attached to another object, we can't warp, it'll bring us along when it warps
+         if ( mAttachedToObj )
+            delta.warpTicks = 0;
 
          if (delta.warpTicks)
          {
