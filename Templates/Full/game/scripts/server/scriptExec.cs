@@ -60,3 +60,4 @@ exec("./gameDM.cs"); // Overrides GameCore with DeathMatch functionality.
 // Load scripts for walkable shapes
 exec("./tsPathShape.cs");
 exec("./walkables.cs");
+exec("./walkableDemo.cs");
