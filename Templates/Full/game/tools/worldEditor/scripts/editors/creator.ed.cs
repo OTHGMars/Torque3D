@@ -182,15 +182,50 @@ function EWCreatorWindow::createStatic( %this, %file )
       return;
    }
 
+   IODropdownMenu.clear();
+   IODropdownMenu.add("1, TSStatic", 1);
+   IODropdownMenu.add("2, TSPathShape", 2);
+   IODropdownMenu.add("3, TSAttachable", 3);
+   IOInputText.text = "Available Types:";
+   %callback = "EWCreatorWindow::createNewTSObject(" @ %this @ ", \"" @ %file @ "\", #);";
+   %cancelCallback = "EWCreatorWindow::createNewTSObject(" @ %this @ ", \"\", 0);";
+   IODropdown("Class Selector", "Select object type", "", %callback, %cancelCallback);
+}
+
+function EWCreatorWindow::createNewTSObject( %this, %file, %newClassID, %className )
+{
+   IOInputText.text = "";
+   IODropdownMenu.clear();
+   if ( %newClassID == 0 )
+      return;
+
    if( !isObject(%this.objectGroup) )
       %this.setNewObjectGroup( MissionGroup );
 
-   %objId = new TSStatic()
+   switch$(%className)
    {
-      shapeName = %file;
-      position = %this.getCreateObjectPosition();
-      parentGroup = %this.objectGroup;
-   };
+      case "TSAttachable":
+         %objId = new TSAttachable()
+         {
+            shapeName = %file;
+            position = %this.getCreateObjectPosition();
+            parentGroup = %this.objectGroup;
+         };
+      case "TSPathShape":
+         %objId = new TSPathShape()
+         {
+            shapeName = %file;
+            position = %this.getCreateObjectPosition();
+            parentGroup = %this.objectGroup;
+         };
+      default:
+         %objId = new TSStatic()
+         {
+            shapeName = %file;
+            position = %this.getCreateObjectPosition();
+            parentGroup = %this.objectGroup;
+         };
+   }
    
    %this.onObjectCreated( %objId );
 }
