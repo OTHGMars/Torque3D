@@ -54,7 +54,7 @@ private:
 
    // Keep track of the shape's rotation around the z axis in world space so we
    // can send relative rotation values to clients
-   F32 mWorldZRot;
+   F32 mWorldZRot, mlastWorldZRot;
 
 protected:
 
@@ -62,7 +62,8 @@ protected:
    {
       SceneObject *obj;
       Point3F anchorPoint;
-      F32 zRotDelta;
+      F32 zRotDelta, relZRot;
+      bool needsUpdate;
    };
    Vector<AttachmentData> mAttachments;
 
@@ -133,6 +134,9 @@ public:
 
    // Return the attachment at index
    SceneObject *getAttachment(S32 index);
+
+   virtual void getRelativeOrientation(SceneObject *attachedObj, Point3F &relPos, Point3F &relRot);
+   virtual void flagAttachedUpdate(SceneObject *attachedObj, bool doUpdate);
 };
 
 #endif // _TSATTACHABLE_H_

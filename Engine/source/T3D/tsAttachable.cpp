@@ -107,14 +107,12 @@ bool TSAttachable::onAdd()
    if ( !Parent::onAdd() )
       return false;
 
-   if ( isServerObject() )
-   {  // Save our initial rotation value
-      Point3F fwdVec;
-      mObjToWorld.getColumn(1, &fwdVec);
-      fwdVec.z = 0.0f;
-      fwdVec.normalizeSafe();
-      mWorldZRot = -mAtan2(-fwdVec.x, fwdVec.y);
-   }
+   // Save our initial rotation value
+   Point3F fwdVec;
+   mObjToWorld.getColumn(1, &fwdVec);
+   fwdVec.z = 0.0f;
+   fwdVec.normalizeSafe();
+   mWorldZRot = -mAtan2(-fwdVec.x, fwdVec.y);
 
    _updateShouldTick();
 
@@ -160,19 +158,20 @@ void TSAttachable::processTick( const Move *move )
 
    Parent::processTick(move);
 
+   // Update our saved Z rotation
+   mlastWorldZRot = mWorldZRot;
+   Point3F fwdVec;
+   mObjToWorld.getColumn(1, &fwdVec);
+   fwdVec.z = 0.0f;
+   fwdVec.normalizeSafe();
+   mWorldZRot = -mAtan2(-fwdVec.x, fwdVec.y);
+   if ( mWorldZRot < 0.0f )
+      mWorldZRot += M_2PI_F;
+
    if ( mAttachments.size() )
    {  // Move all attachments along with the shape
       moveAttachments(oldWorldToObj, mObjToWorld);
       setMaskBits( MovementMask );
-   }
-
-   if ( isServerObject() )
-   {  // Update our saved rotation
-      Point3F fwdVec;
-      mObjToWorld.getColumn(1, &fwdVec);
-      fwdVec.z = 0.0f;
-      fwdVec.normalizeSafe();
-      mWorldZRot = -mAtan2(-fwdVec.x, fwdVec.y);
    }
 }
 
@@ -238,7 +237,15 @@ U32 TSAttachable::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
          Point3F fwdVec;
          objTrans.getColumn(1, &fwdVec);
          F32 relativeRot = mWorldZRot - (-mAtan2(-fwdVec.x, fwdVec.y));
+         if (  relativeRot < 0 )
+             relativeRot += M_2PI_F;
+         if (  relativeRot > M_2PI_F )
+             relativeRot -= M_2PI_F;
          stream->write(relativeRot);
+         mAttachments[i].relZRot = relativeRot;
+
+         // Send a flag to let them know if this is their control object that's attached
+         stream->writeFlag( con == ((NetConnection *) obj->getControllingClient()) );
       }
       stream->writeFlag(false);
    }
@@ -270,6 +277,7 @@ void TSAttachable::unpackUpdate(NetConnection *con, BitStream *stream)
             objData.obj = obj;
 
             objData.zRotDelta = 0.0f;
+            objData.needsUpdate = true;
             mAttachments.push_back(objData);
             obj->processAfter(this);
             obj->setAttachedToObj(this);
@@ -282,13 +290,6 @@ void TSAttachable::unpackUpdate(NetConnection *con, BitStream *stream)
    // MovementMask
    if (stream->readFlag())
    {
-      // Find the current z axis rotation of our forward vector in world space
-      Point3F fwdVec;
-      mObjToWorld.getColumn(1, &fwdVec);
-      fwdVec.z = 0.0f;
-      fwdVec.normalizeSafe();
-      mWorldZRot = -mAtan2(-fwdVec.x, fwdVec.y);
-
       Point3F worldPos;
       F32 relativeRot, newZRot;
       S32 i = 0;
@@ -299,15 +300,27 @@ void TSAttachable::unpackUpdate(NetConnection *con, BitStream *stream)
 
          mathRead(*stream, &worldPos);
          stream->read(&relativeRot);
+         bool isLocalControlObj = stream->readFlag();
+
          mAttachments[i].anchorPoint = worldPos;
+         mAttachments[i].relZRot = relativeRot;
          mObjToWorld.mulP(worldPos);
 
          newZRot = mWorldZRot - relativeRot;
+         while (newZRot < 0)
+            newZRot += M_2PI_F;
+         while (newZRot >= M_2PI_F)
+            newZRot -= M_2PI_F;
          if ( obj->getTypeMask() | PlayerObjectType )
          {  // Players just don't play nice when you modify their transform on a client
             Player *plrObj = (Player *) obj;
-            plrObj->setPosition(worldPos, Point3F(0.0f, 0.0f, newZRot));
-            plrObj->setDeltaRot(newZRot); // Reset interpolation to the current rotation so they don't warp it
+            if ( mAttachments[i].needsUpdate || !isLocalControlObj )
+            {
+               Point3F deltaRot(0.0f, 0.0f, newZRot);
+               plrObj->setPosition(worldPos, deltaRot);
+               plrObj->setDeltas(worldPos, deltaRot); // Reset interpolation to the current rotation so they don't warp it
+               mAttachments[i].needsUpdate = false;
+            }
          }
          else
          {
@@ -358,30 +371,27 @@ void TSAttachable::moveAttachments(MatrixF &oldWTOMat, MatrixF &newOTWMat)
       obj = mAttachments[i].obj;
       objMat = obj->getTransform();
 
-      if ( !isServerObject() )
-      {
-         objMat.getColumn(1, &fwdVec);
-         oldZRot = -mAtan2(-fwdVec.x, fwdVec.y);
-         if ( oldZRot < 0.0f )
-            oldZRot += M_2PI_F;
-      }
+      objMat.getColumn(1, &fwdVec);
+      oldZRot = -mAtan2(-fwdVec.x, fwdVec.y);
+      if ( oldZRot < 0.0f )
+         oldZRot += M_2PI_F;
+      mAttachments[i].relZRot = mlastWorldZRot - oldZRot;
+      if (  mAttachments[i].relZRot < 0.0f )
+            mAttachments[i].relZRot += M_2PI_F;
 
       objMat.mulL(oldWTOMat);
       mAttachments[i].anchorPoint = objMat.getPosition(); 
       objMat.mulL(newOTWMat);
 
-      if ( !isServerObject() )
-      {  // Save the amount that we're going to rotate the attachment this tick so we can interpolate it in.
-         objMat.getColumn(1, &fwdVec);
-         fwdVec.z = 0.0f;
-         fwdVec.normalizeSafe();
-         newZRot = -mAtan2(-fwdVec.x, fwdVec.y);
-         if ( newZRot < 0.0f )
-            newZRot += M_2PI_F;
-         mAttachments[i].zRotDelta = newZRot - oldZRot;
-         if ( mFabs(mAttachments[i].zRotDelta) > M_PI_F )
-            mAttachments[i].zRotDelta += (mAttachments[i].zRotDelta < 0.0f) ? M_2PI_F : -M_2PI_F;
-      }
+      // Save the amount that we're going to rotate the attachment this tick so we can interpolate it in.
+      newZRot = mWorldZRot - mAttachments[i].relZRot;
+      mAttachments[i].zRotDelta = newZRot - oldZRot;
+      while ( mFabs(mAttachments[i].zRotDelta) > M_PI_F )
+         mAttachments[i].zRotDelta += (mAttachments[i].zRotDelta < 0.0f) ? M_2PI_F : -M_2PI_F;
+
+      objMat.getColumn(3, &newPos);
+      objMat.set(EulerF(0.0f, 0.0f, newZRot));
+      objMat.setPosition(newPos);
 
       obj->setTransform(objMat);
    }
@@ -418,6 +428,32 @@ void TSAttachable::moveRenderedAttachments()
       objMat.setColumn(3, worldPos);
       obj->setRenderTransform(objMat);
    }
+}
+
+//----------------------------------------------------------------------------
+void TSAttachable::getRelativeOrientation(SceneObject *attachedObj, Point3F &relPos, Point3F &relRot)
+{
+   // Fills the position and rotation for an attached object relative to the object that
+   // it's attached to.
+   for ( U32 i = 0; i < mAttachments.size(); ++i )
+      if ( mAttachments[i].obj == attachedObj )
+      {
+         relPos = mAttachments[i].anchorPoint;
+         relRot.set(0.0f, 0.0f, mAttachments[i].relZRot);
+         return;
+      }
+
+   relPos = relRot = Point3F::Zero;
+}
+
+void TSAttachable::flagAttachedUpdate(SceneObject *attachedObj, bool doUpdate)
+{
+   for ( U32 i = 0; i < mAttachments.size(); ++i )
+      if ( mAttachments[i].obj == attachedObj )
+      {
+         mAttachments[i].needsUpdate = doUpdate;
+         return;
+      }
 }
 
 //----------------------------------------------------------------------------
