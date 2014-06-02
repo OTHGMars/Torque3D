@@ -5980,6 +5980,12 @@ void Player::writePacketData(GameConnection *connection, BitStream *stream)
    if (stream->writeFlag(mJumpDelay > 0))
       stream->writeInt(mJumpDelay,PlayerData::JumpDelayBits);
 
+   if ( stream->writeFlag(mAttachedToObj) )
+   {
+      writeAttachedPacketData(connection, stream);
+      return;
+   }
+
    Point3F pos;
    getTransform().getColumn(3,&pos);
    if (stream->writeFlag(!isMounted())) {
@@ -6036,6 +6042,12 @@ void Player::readPacketData(GameConnection *connection, BitStream *stream)
    else
       mJumpDelay = 0;
 
+   if ( stream->readFlag() )
+   {
+      readAttachedPacketData(connection, stream);
+      return;
+   }
+
    Point3F pos,rot;
    if (stream->readFlag()) {
       // Only written if we are not mounted
@@ -6079,11 +6091,6 @@ void Player::readPacketData(GameConnection *connection, BitStream *stream)
    stream->read(&mHead.z);
    stream->read(&rot.z);
    rot.x = rot.y = 0;
-   if ( mAttachedToObj )
-   {  // If we're attached to another object, it will update our position and rotation
-      pos = getPosition();
-      rot = delta.rot;
-   }
    setPosition(pos,rot);
    delta.head = mHead;
    delta.rot = rot;
@@ -6262,6 +6269,15 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
       delta.head = mHead;
       delta.headVec.set(0.0f, 0.0f, 0.0f);
 
+      if ( mAttachedToObj )
+      {  // If we're attached to another object, it's maintaining our position and rotation.
+         //Just read in the rest of the update and return
+         stream->readFlag();
+         F32 energy = stream->readFloat(EnergyLevelBits) * mDataBlock->maxEnergy;
+         setEnergyLevel(energy);
+         return;
+      }
+
       if (stream->readFlag() && isProperlyAdded())
       {
          // Determine number of ticks to warp based on the average
@@ -6270,10 +6286,6 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
          F32 as = (speed + mVelocity.len()) * 0.5f * TickSec;
          F32 dt = (as > 0.00001f) ? delta.warpOffset.len() / as: sMaxWarpTicks;
          delta.warpTicks = (S32)((dt > sMinWarpTicks) ? getMax(mFloor(dt + 0.5f), 1.0f) : 0.0f);
-
-         // If we're attached to another object, we can't warp, it'll bring us along when it warps
-         if ( mAttachedToObj )
-            delta.warpTicks = 0;
 
          if (delta.warpTicks)
          {
@@ -7141,4 +7153,117 @@ void Player::renderConvex( ObjectRenderInst *ri, SceneRenderState *state, BaseMa
    GFX->enterDebugEvent( ColorI(255,0,255), "Player_renderConvex" );
    mConvex.renderWorkingList();
    GFX->leaveDebugEvent();
+}
+
+//----------------------------------------------------------------------------
+
+void Player::setDeltas(Point3F pos, Point3F rot)
+{
+   delta.pos = pos;
+   delta.rot = rot;
+}
+
+void Player::writeAttachedPacketData(GameConnection *connection, BitStream *stream)
+{  // Convert our position, velocity and rotation to be relative to the object we're attached to
+   // Get the relative position and rotation from the object that we're attached to
+   Point3F relPos, relRot;
+   mAttachedToObj->getRelativeOrientation(this, relPos, relRot);
+
+   // Converting to int here because the conversion to/from different object transforms here 
+   // and on the server will lead to miniscule floating point differences that will change 
+   // the checksum for essentially identical data. This conversion ensures that if the difference
+   // is no greater than 1/100 of a unit the packet will not be sent. The 18 bit limit
+   // allows attachables to represent local position to +/- ~1.3k in all dimensions.
+   stream->writeSignedInt((S32) mRoundToNearest(relPos.x * 100), 18);
+   stream->writeSignedInt((S32) mRoundToNearest(relPos.y * 100), 18);
+   stream->writeSignedInt((S32) mRoundToNearest(relPos.z * 100), 18);
+
+   stream->writeInt(mJumpSurfaceLastContact > 15 ? 15 : mJumpSurfaceLastContact, 4);
+
+   if (stream->writeFlag(!mAllowSprinting || !mAllowCrouching || !mAllowProne || !mAllowJumping || !mAllowJetJumping || !mAllowSwimming))
+   {
+      stream->writeFlag(mAllowJumping);
+      stream->writeFlag(mAllowJetJumping);
+      stream->writeFlag(mAllowSprinting);
+      stream->writeFlag(mAllowCrouching);
+      stream->writeFlag(mAllowProne);
+      stream->writeFlag(mAllowSwimming);
+   }
+
+   stream->write(mHead.x);
+   if(stream->writeFlag(mDataBlock->cameraCanBank))
+   {
+      // Include mHead.y to allow for camera banking
+      stream->write(mHead.y);
+   }
+   stream->write(mHead.z);
+
+   // Relative rotation can range from 0 to 2pi so this gives 3 decimal place accuracy.
+   // Note: this value is only used for creating the checksum to determine if we need an update.
+   // If an update is required, the object we're attached to will determine the rotation.
+   stream->writeInt((S32)(relRot.z * 1000), 13);
+
+   if (mControlObject) {
+      S32 gIndex = connection->getGhostIndex(mControlObject);
+      if (stream->writeFlag(gIndex != -1)) {
+         stream->writeInt(gIndex,NetConnection::GhostIdBitSize);
+         mControlObject->writePacketData(connection, stream);
+      }
+   }
+   else
+      stream->writeFlag(false);
+}
+
+
+void Player::readAttachedPacketData(GameConnection *connection, BitStream *stream)
+{
+   Point3F relPos, relRot;
+
+   relPos.x = stream->readSignedInt(18) * 0.01f;
+   relPos.y = stream->readSignedInt(18) * 0.01f;
+   relPos.z = stream->readSignedInt(18) * 0.01f;
+   mJumpSurfaceLastContact = stream->readInt(4);
+
+   if (stream->readFlag())
+   {
+      mAllowJumping = stream->readFlag();
+      mAllowJetJumping = stream->readFlag();
+      mAllowSprinting = stream->readFlag();
+      mAllowCrouching = stream->readFlag();
+      mAllowProne = stream->readFlag();
+      mAllowSwimming = stream->readFlag();
+   }
+   else
+   {
+      mAllowJumping = true;
+      mAllowJetJumping = true;
+      mAllowSprinting = true;
+      mAllowCrouching = true;
+      mAllowProne = true;
+      mAllowSwimming = true;
+   }
+
+   stream->read(&mHead.x);
+   if(stream->readFlag())
+   {
+      // Include mHead.y to allow for camera banking
+      stream->read(&mHead.y);
+   }
+   stream->read(&mHead.z);
+   relRot.z = stream->readInt(13) * 0.001f;
+
+   if ( mAttachedToObj )
+   {
+      mAttachedToObj->flagAttachedUpdate(this, true);
+      delta.head = mHead;
+   }
+
+   if (stream->readFlag()) {
+      S32 gIndex = stream->readInt(NetConnection::GhostIdBitSize);
+      ShapeBase* obj = static_cast<ShapeBase*>(connection->resolveGhost(gIndex));
+      setControlObject(obj);
+      obj->readPacketData(connection, stream);
+   }
+   else
+      setControlObject(0);
 }

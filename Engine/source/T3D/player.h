@@ -766,7 +766,9 @@ public:
    virtual void renderConvex( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );   
    virtual void renderMountedImage( U32 imageSlot, TSRenderState &rstate, SceneRenderState *state );
 
-   void setDeltaRot(F32 dZ) { delta.rot.z = dZ; }
+   void setDeltas(Point3F pos, Point3F rot);
+   void writeAttachedPacketData(GameConnection *conn, BitStream *stream);
+   void readAttachedPacketData (GameConnection *conn, BitStream *stream);
 };
 
 typedef Player::Pose PlayerPose;
