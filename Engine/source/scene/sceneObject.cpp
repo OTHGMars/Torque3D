@@ -1173,6 +1173,13 @@ void SceneObject::getRenderMountTransform( F32 delta, S32 index, const MatrixF &
    outMat->mul( mRenderObjToWorld, mountTransform );
 }
 
+//-----------------------------------------------------------------------------
+
+void SceneObject::getRelativeOrientation(SceneObject *attachedObj, Point3F &relPos, Point3F &relRot)
+{
+   relPos = relRot = Point3F::Zero;
+}
+
 //=============================================================================
 //    Console API.
 //=============================================================================

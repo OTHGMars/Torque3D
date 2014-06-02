@@ -777,6 +777,15 @@ class SceneObject : public NetObject, private SceneContainer::Link, public Proce
    public:
       SceneObject *getAttachedToObj() { return mAttachedToObj; }
       void setAttachedToObj(SceneObject *obj) { mAttachedToObj = obj; }
+
+      // Fills the position and rotation for an attached object relative to the object that
+      // it's attached to.
+      virtual void getRelativeOrientation(SceneObject *attachedObj, Point3F &relPos, Point3F &relRot);
+
+      // Flags that an attached object needs a relative position/rotation update. This reduces 
+      // backstepping on a local control object by only updating when it is out of synch with
+      // the server.
+      virtual void flagAttachedUpdate(SceneObject *attachedObj, bool doUpdate) {}
 };
 
 #endif  // _SCENEOBJECT_H_
