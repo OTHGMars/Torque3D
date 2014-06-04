@@ -311,7 +311,7 @@ void TSAttachable::unpackUpdate(NetConnection *con, BitStream *stream)
             newZRot += M_2PI_F;
          while (newZRot >= M_2PI_F)
             newZRot -= M_2PI_F;
-         if ( obj->getTypeMask() | PlayerObjectType )
+         if ( obj->getTypeMask() & PlayerObjectType )
          {  // Players just don't play nice when you modify their transform on a client
             Player *plrObj = (Player *) obj;
             if ( mAttachments[i].needsUpdate || !isLocalControlObj )
