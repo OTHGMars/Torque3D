@@ -944,7 +944,8 @@ void SceneObject::setProcessTick( bool t )
 
    if ( mProcessTick )
    {
-      plUnlink();
+      if ( !getMountedObjectCount() )
+         plUnlink(); // Only unlink if there is nothing mounted to us
       mProcessTick = false;
    }
    else
