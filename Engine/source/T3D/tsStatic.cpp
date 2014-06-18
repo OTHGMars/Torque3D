@@ -465,10 +465,15 @@ void TSStatic::reSkin()
 
 void TSStatic::processTick( const Move *move )
 {
-   AssertFatal( mPlayAmbient && mAmbientThread, "TSSTatic::adanceTime called with nothing to play." );
-
-   if ( isServerObject() )
+   if ( isServerObject() && mPlayAmbient && mAmbientThread )
       mShapeInstance->advanceTime( TickSec, mAmbientThread );
+
+   if ( isMounted() )
+   {
+      MatrixF mat( true );
+      mMount.object->getMountTransform(mMount.node, mMount.xfm, &mat );
+      setTransform( mat );
+   }
 }
 
 void TSStatic::interpolateTick( F32 delta )
@@ -477,14 +482,20 @@ void TSStatic::interpolateTick( F32 delta )
 
 void TSStatic::advanceTime( F32 dt )
 {
-   AssertFatal( mPlayAmbient && mAmbientThread, "TSSTatic::advanceTime called with nothing to play." );
-   
-   mShapeInstance->advanceTime( dt, mAmbientThread );
+   if ( mPlayAmbient && mAmbientThread )
+      mShapeInstance->advanceTime( dt, mAmbientThread );
+
+   if ( isMounted() )
+   {
+      MatrixF mat( true );
+      mMount.object->getRenderMountTransform( dt, mMount.node, mMount.xfm, &mat );
+      setRenderTransform( mat );
+   }
 }
 
 void TSStatic::_updateShouldTick()
 {
-   bool shouldTick = mPlayAmbient && mAmbientThread;
+   bool shouldTick = (mPlayAmbient && mAmbientThread) || isMounted();
 
    if ( isTicking() != shouldTick )
       setProcessTick( shouldTick );
@@ -584,12 +595,15 @@ void TSStatic::onScaleChanged()
       else
          _updatePhysics();
    }
+
+   setMaskBits( ScaleMask );
 }
 
 void TSStatic::setTransform(const MatrixF & mat)
 {
    Parent::setTransform(mat);
-   setMaskBits( TransformMask );
+   if ( !isMounted() )
+      setMaskBits( TransformMask );
 
    if ( mPhysicsRep )
       mPhysicsRep->setTransform( mat );
@@ -603,9 +617,15 @@ U32 TSStatic::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 {
    U32 retMask = Parent::packUpdate(con, mask, stream);
 
-   mathWrite( *stream, getTransform() );
-   mathWrite( *stream, getScale() );
-   stream->writeString( mShapeName );
+   if ( stream->writeFlag( mask & TransformMask ) )  
+      mathWrite( *stream, getTransform() );
+
+   if ( stream->writeFlag( mask & ScaleMask ) )  
+   {
+      // Only write one bit if the scale is one.
+      if ( stream->writeFlag( mObjScale != Point3F::One ) )
+         mathWrite( *stream, mObjScale );   
+   }
 
    if ( stream->writeFlag( mask & UpdateCollisionMask ) )
       stream->write( (U32)mCollisionType );
@@ -613,20 +633,24 @@ U32 TSStatic::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    if ( stream->writeFlag( mask & SkinMask ) )
       con->packNetStringHandleU( stream, mSkinNameHandle );
 
-   stream->write( (U32)mDecalType );
+   if ( stream->writeFlag( mask & AdvancedStaticOptionsMask ) )  
+   {
+      stream->writeString( mShapeName );
+      stream->write( (U32)mDecalType );
 
-   stream->writeFlag( mAllowPlayerStep );
-   stream->writeFlag( mMeshCulling );
-   stream->writeFlag( mUseOriginSort );
+      stream->writeFlag( mAllowPlayerStep );
+      stream->writeFlag( mMeshCulling );
+      stream->writeFlag( mUseOriginSort );
 
-   stream->write( mRenderNormalScalar );
+      stream->write( mRenderNormalScalar );
 
-   stream->write( mForceDetail );
+      stream->write( mForceDetail );
 
-   stream->writeFlag( mPlayAmbient );
+      stream->writeFlag( mPlayAmbient );
 
-   if ( mLightPlugin )
-      retMask |= mLightPlugin->packUpdate(this, AdvancedStaticOptionsMask, con, mask, stream);
+      if ( mLightPlugin )
+         retMask |= mLightPlugin->packUpdate(this, AdvancedStaticOptionsMask, con, mask, stream);
+   }
 
    return retMask;
 }
@@ -635,14 +659,25 @@ void TSStatic::unpackUpdate(NetConnection *con, BitStream *stream)
 {
    Parent::unpackUpdate(con, stream);
 
-   MatrixF mat;
-   Point3F scale;
-   mathRead( *stream, &mat );
-   mathRead( *stream, &scale );
-   setScale( scale);
-   setTransform(mat);
+   if ( stream->readFlag() ) // TransformMask
+   {
+      MatrixF mat;
+      mathRead( *stream, &mat );
+      setTransform(mat);
+      setRenderTransform(mat);
+   }
 
-   mShapeName = stream->readSTString();
+   if ( stream->readFlag() ) // ScaleMask
+   {
+      if ( stream->readFlag() )
+      {
+         VectorF scale;
+         mathRead( *stream, &scale );
+         setScale( scale );
+      }
+      else
+         setScale( Point3F::One );
+   }
 
    if ( stream->readFlag() ) // UpdateCollisionMask
    {
@@ -670,21 +705,26 @@ void TSStatic::unpackUpdate(NetConnection *con, BitStream *stream)
       }
    }
 
-   stream->read( (U32*)&mDecalType );
-
-   mAllowPlayerStep = stream->readFlag();
-   mMeshCulling = stream->readFlag();   
-   mUseOriginSort = stream->readFlag();
-
-   stream->read( &mRenderNormalScalar );
-
-   stream->read( &mForceDetail );
-
-   mPlayAmbient = stream->readFlag();
-
-   if ( mLightPlugin )
+   if ( stream->readFlag() ) // AdvancedStaticOptionsMask
    {
-      mLightPlugin->unpackUpdate(this, con, stream);
+      mShapeName = stream->readSTString();
+
+      stream->read( (U32*)&mDecalType );
+
+      mAllowPlayerStep = stream->readFlag();
+      mMeshCulling = stream->readFlag();   
+      mUseOriginSort = stream->readFlag();
+
+      stream->read( &mRenderNormalScalar );
+
+      stream->read( &mForceDetail );
+
+      mPlayAmbient = stream->readFlag();
+
+      if ( mLightPlugin )
+      {
+         mLightPlugin->unpackUpdate(this, con, stream);
+      }
    }
 
    if ( isProperlyAdded() )
@@ -1035,6 +1075,19 @@ void TSStaticPolysoupConvex::getFeatures(const MatrixF& mat,const VectorF& n, Co
    cf->mFaceList.last().vertex[2] = firstVert+3;
 
    // All done!
+}
+
+void TSStatic::onMount( SceneObject *obj, S32 node )
+{
+   Parent::onMount(obj, node);
+   _updateShouldTick();
+}
+
+void TSStatic::onUnmount( SceneObject *obj, S32 node )
+{
+   Parent::onUnmount( obj, node );
+   setMaskBits( TransformMask );
+   _updateShouldTick();
 }
 
 //------------------------------------------------------------------------
