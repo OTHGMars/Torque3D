@@ -8,6 +8,16 @@ datablock ItemData( ItemBoulder )
    shapeFile = "art/shapes/rocks/boulder.dts";
 };
 
+datablock StaticShapeData( LurkerSS )
+{	
+   shapeFile = "art/shapes/weapons/Lurker/TP_Lurker.DAE";
+};
+
+datablock ItemData( LurkerItem )
+{	
+   shapeFile = "art/shapes/weapons/Lurker/TP_Lurker.DAE";
+};
+
 datablock WheeledVehicleData(CustomCheetah : CheetahCar)
 {
    nameTag = 'Custom Cheetah';
@@ -44,7 +54,7 @@ function CustomCheetah::onAdd(%this, %obj)
       scale = "0.2 0.2 0.2";
    };
    %rigidRock.setShapeName("RigidShape");
-   %obj.rigidRock = %itemRock;
+   %obj.rigidRock = %rigidRock;
    %rigidRock.car = %obj;
    %obj.mountObject(%rigidRock, %this.turretSlot, "0 1.4 .6 0 0 1 0");
 
@@ -66,38 +76,60 @@ function CustomCheetah::onAdd(%this, %obj)
    %obj.tsStaticMount = %tsStaticMount;
    %tsStaticMount.car = %obj;
    %obj.mountObject(%tsStaticMount, %this.turretSlot, "0 1.4 0 0 0 1 0");
+
+   // TSStatic MountEx
+   %tsExMount = new TSStatic() {
+      shapeName = "art/shapes/rocks/boulder.dts";
+      scale = "0.15 0.15 0.15";
+      skin = "MossyRock02=Grid512_OrangeLines_Mat";
+   };
+   %obj.tsExMount = %tsExMount;
+   %tsExMount.car = %obj;
+   %obj.mountObjectEx(%tsExMount, "Hub2", "", "-1.2 0 0 0 0 1 0");
+
+   // RigidShape MountEx
+   %rigidRock = new RigidShape() {
+      datablock = BouncingBoulder;
+      scale = "0.15 0.15 0.15";
+      skin = "MossyRock02=Grid512_OrangeLines_Mat";
+   };
+   %rigidRock.setShapeName("RigidShape");
+   %obj.rigidRockEx = %itemRock;
+   %rigidRock.car = %obj;
+   %obj.mountObjectEx(%rigidRock, "Hub3", "", "1.2 0 0 0 0 1 0");
+
+   // StaticShape Lurker MountEx
+   %staticLurker = new StaticShape() {
+      datablock = LurkerSS;
+      scale = "1.5 1.5 1.5";
+   };
+   %staticLurker.setShapeName("StaticShape");
+   %obj.staticLurker = %staticLurker;
+   %staticLurker.car = %obj;
+   %obj.mountObjectEx(%staticLurker, "Hub1", "MuzzlePoint", "-.85 0 0 1 0 0 1.57");
+   
+   // Item Lurker MountEx
+   %itemLurker = new Item() {
+      datablock = LurkerItem;
+      scale = "1.5 1.5 1.5";
+   };
+   %itemLurker.setShapeName("Item");
+   %obj.itemLurker = %itemLurker;
+   %itemLurker.car = %obj;
+   %obj.mountObjectEx(%itemLurker, "Hub0", "MuzzlePoint", ".85 0 0 1 0 0 1.57");
+
+   for (%i = 0; %i < %obj.getMountedObjectCount(); %i++ )
+      echo("Object #" @ %i SPC %obj.getMountedObject(%i).getClassName() @ " Mounted to " @ %obj.getMountedObjectNodeEx(%i));
 }
 
 function CustomCheetah::onRemove(%this, %obj)
 {
-   if( isObject(%obj.tsStaticMount) )
+   %count = %obj.getMountedObjectCount();
+   for (%i = %count-1; %i >= 0; %i--)
    {
-      %obj.unmountObject(%obj.tsStaticMount);
-      %obj.tsStaticMount.delete();
-   }
-
-   if( isObject(%obj.vehicleMount) )
-   {
-      %obj.unmountObject(%obj.vehicleMount);
-      %obj.vehicleMount.delete();
-   }
-
-   if( isObject(%obj.rigidRock) )
-   {
-      %obj.unmountObject(%obj.rigidRock);
-      %obj.rigidRock.delete();
-   }
-
-   if( isObject(%obj.itemRock) )
-   {
-      %obj.unmountObject(%obj.itemRock);
-      %obj.itemRock.delete();
-   }
-
-   if( isObject(%obj.staticRock) )
-   {
-      %obj.unmountObject(%obj.staticRock);
-      %obj.staticRock.delete();
+      %mountObj = %obj.getMountedObject(%i);
+      %obj.unmountObject(%mountObj);
+      %mountObj.delete();
    }
 
    CheetahCar::onRemove(%this, %obj);
