@@ -471,7 +471,19 @@ void TSStatic::processTick( const Move *move )
    if ( isMounted() )
    {
       MatrixF mat( true );
-      mMount.object->getMountTransform(mMount.node, mMount.xfm, &mat );
+      MatrixF xfmMat = mMount.xfm;
+      if ( mMount.fromNode != -1 )
+      {
+         MatrixF mulTransform, mountTransform = mShapeInstance->mNodeTransforms[mMount.fromNode];
+         const Point3F& scale = getScale();
+         Point3F position = mountTransform.getPosition();
+         position.convolve( scale );
+         xfmMat.mulV(position);
+         mountTransform.setPosition( position );
+         mulTransform = mountTransform.affineInverse();
+         xfmMat.mulL(mulTransform);
+      }
+      mMount.object->getNodeTransform(mMount.node, xfmMat, &mat );
       setTransform( mat );
    }
 }
@@ -488,7 +500,19 @@ void TSStatic::advanceTime( F32 dt )
    if ( isMounted() )
    {
       MatrixF mat( true );
-      mMount.object->getRenderMountTransform( dt, mMount.node, mMount.xfm, &mat );
+      MatrixF xfmMat = mMount.xfm;
+      if ( mMount.fromNode != -1 )
+      {
+         MatrixF mulTransform, mountTransform = mShapeInstance->mNodeTransforms[mMount.fromNode];
+         const Point3F& scale = getScale();
+         Point3F position = mountTransform.getPosition();
+         position.convolve( scale );
+         xfmMat.mulV(position);
+         mountTransform.setPosition( position );
+         mulTransform = mountTransform.affineInverse();
+         xfmMat.mulL(mulTransform);
+      }
+      mMount.object->getRenderNodeTransform( mMount.node, xfmMat, &mat );
       setRenderTransform( mat );
    }
 }
@@ -1088,6 +1112,76 @@ void TSStatic::onUnmount( SceneObject *obj, S32 node )
    Parent::onUnmount( obj, node );
    setMaskBits( TransformMask );
    _updateShouldTick();
+}
+
+// Returns the node index for the passed node name. Returns -1 if the node does not exist
+S32 TSStatic::resolveNodeIndex(const char *nodeName)
+{
+   return mShapeInstance->getShape()->findNode(nodeName);
+}
+
+// Returns the mount number 0...31. If the node is not named MountNN, returns -1
+S32 TSStatic::nodeIdxToMountNum(S32 nodeIndex)
+{
+   String nodeName = mShapeInstance->getShape()->getNodeName(nodeIndex);
+   if ( nodeName.compare("mount", 5, String::NoCase) == 0 )
+   {
+      nodeName.erase(0, 5);
+      if ( (nodeName.length() > 0) && (nodeName.length() < 3) && dIsdigit(nodeName[0]) && ((nodeName.length() == 1) || dIsdigit(nodeName[1])) )
+         return dAtoi(nodeName);
+   }
+   return -1;
+}
+
+// Returns the name of the node at nodeIndex
+const String& TSStatic::nodeIdxToNodeName(S32 nodeIndex)
+{
+   return mShapeInstance->getShape()->getNodeName(nodeIndex);
+}
+
+void TSStatic::getNodeTransform( S32 nodeIndex, const MatrixF &xfm, MatrixF *outMat )
+{
+   // Returns mount point to world space transform
+   if ( nodeIndex >= 0 && nodeIndex < mShapeInstance->getShape()->nodes.size()) {
+      MatrixF mountTransform = mShapeInstance->mNodeTransforms[nodeIndex];
+      mountTransform.mul( xfm );
+      const Point3F& scale = getScale();
+
+      // The position of the mount point needs to be scaled.
+      Point3F position = mountTransform.getPosition();
+      position.convolve( scale );
+      mountTransform.setPosition( position );
+
+      // Also we would like the object to be scaled to the model.
+      outMat->mul(mObjToWorld, mountTransform);
+      return;
+   }
+
+   // Then let SceneObject handle it.
+   Parent::getNodeTransform( nodeIndex, xfm, outMat );      
+}
+
+void TSStatic::getRenderNodeTransform( S32 nodeIndex, const MatrixF &xfm, MatrixF *outMat )
+{
+   // Returns mount point to world space transform
+   if ( nodeIndex >= 0 && nodeIndex < mShapeInstance->getShape()->nodes.size()) {
+      MatrixF mountTransform = mShapeInstance->mNodeTransforms[nodeIndex];
+      mountTransform.mul( xfm );
+      const Point3F& scale = getScale();
+
+      // The position of the mount point needs to be scaled.
+      Point3F position = mountTransform.getPosition();
+      position.convolve( scale );
+      mountTransform.setPosition( position );
+
+      // Also we would like the object to be scaled to the model.
+      mountTransform.scale( scale );
+      outMat->mul(getRenderTransform(), mountTransform);
+      return;
+   }
+
+   // Then let SceneObject handle it.
+   Parent::getRenderNodeTransform( nodeIndex, xfm, outMat );   
 }
 
 //------------------------------------------------------------------------

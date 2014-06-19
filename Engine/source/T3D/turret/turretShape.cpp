@@ -641,7 +641,19 @@ void TurretShape::interpolateTick(F32 dt)
 
    if (isMounted()) {
       MatrixF mat;
-      mMount.object->getRenderMountTransform( dt, mMount.node, mMount.xfm, &mat );
+      MatrixF xfmMat = mMount.xfm;
+      if ( mMount.fromNode != -1 )
+      {
+         MatrixF mulTransform, mountTransform = mShapeInstance->mNodeTransforms[mMount.fromNode];
+         const Point3F& scale = getScale();
+         Point3F position = mountTransform.getPosition();
+         position.convolve( scale );
+         xfmMat.mulV(position);
+         mountTransform.setPosition( position );
+         mulTransform = mountTransform.affineInverse();
+         xfmMat.mulL(mulTransform);
+      }
+      mMount.object->getRenderNodeTransform( mMount.node, xfmMat, &mat );
       ShapeBase::setRenderTransform(mat);
    }
 

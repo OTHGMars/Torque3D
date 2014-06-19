@@ -272,7 +272,7 @@ void ParticleEmitterNode::processTick(const Move* move)
    if ( isMounted() )
    {
       MatrixF mat;
-      mMount.object->getMountTransform( mMount.node, mMount.xfm, &mat );
+      mMount.object->getNodeTransform( mMount.node, mMount.xfm, &mat );
       setTransform( mat );
    }
 }
