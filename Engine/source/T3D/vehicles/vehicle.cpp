@@ -1325,7 +1325,9 @@ bool Vehicle::updateCollision(F32 dt)
    if (state && state->dist <= mDataBlock->collisionTol) 
    {
       //resolveDisplacement(ns,state,dt);
+      disableCollision();
       mConvex.getCollisionInfo(cmat, getScale(), &mCollisionList, mDataBlock->collisionTol);
+      enableCollision();
    }
 
    // Resolve collisions
