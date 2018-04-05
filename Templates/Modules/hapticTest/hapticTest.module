@@ -1,0 +1,10 @@
+<ModuleDefinition
+	ModuleId="hapticTest"
+	VersionId="1"
+	Description="SDL Haptic Playground Module."
+	ScriptFile="hapticTest.cs"
+	CreateFunction="create"
+	DestroyFunction="destroy"
+	Group="Game"
+	Dependencies="UI=1">
+</ModuleDefinition>
