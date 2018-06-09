@@ -61,7 +61,8 @@ void GFXDrawUtil::_setupStateBlocks()
    bitmapStretchSR.setZReadWrite(false);
    bitmapStretchSR.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
    bitmapStretchSR.samplersDefined = true;
-   bitmapStretchSR.setColorWrites(true, true, true, false); // NOTE: comment this out if alpha write is needed
+   //bitmapStretchSR.setColorWrites(true, true, true, false); // NOTE: comment this out if alpha write is needed
+   bitmapStretchSR.setSeparateAlphaBlend(true, GFXBlendOne, GFXBlendOne, GFXBlendOpMax);
 
    // Linear: Create wrap SB
    bitmapStretchSR.samplers[0] = GFXSamplerStateDesc::getWrapLinear();
@@ -89,6 +90,7 @@ void GFXDrawUtil::_setupStateBlocks()
    rectFill.setCullMode(GFXCullNone);
    rectFill.setZReadWrite(false);
    rectFill.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
+   rectFill.setSeparateAlphaBlend(true, GFXBlendOne, GFXBlendOne, GFXBlendOpMax);
    mRectFillSB = mDevice->createStateBlock(rectFill);
 }
 
