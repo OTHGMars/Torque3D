@@ -4,11 +4,16 @@
 #include "gfx/gfxAPI.h"
 #include "gfx/gfxDebugEvent.h"
 
+#include "materials/baseMatInstance.h"
+#include "materials/matInstance.h"
+#include "materials/materialDefinition.h"
+
 #include "console/consoleTypes.h"
 #include "console/console.h"
 
 IMPLEMENT_CONOBJECT(GuiOffscreenCanvas);
 
+GuiOffscreenCanvas* GuiOffscreenCanvas::sActiveOffscreenCanvas = NULL;
 Vector<GuiOffscreenCanvas*> GuiOffscreenCanvas::sList;
 
 GuiOffscreenCanvas::GuiOffscreenCanvas()
@@ -19,10 +24,14 @@ GuiOffscreenCanvas::GuiOffscreenCanvas()
    mTargetDirty = true;
    mDynamicTarget = false;
    mUseDepth = false;
+   mCanInteract = false;
+   mMaxInteractDistance = 0.0f;
+   mRenderCount = 0;
 }
 
 GuiOffscreenCanvas::~GuiOffscreenCanvas()
 {
+   mPlatformWindow = NULL;
 }
 
 void GuiOffscreenCanvas::initPersistFields()
@@ -32,8 +41,33 @@ void GuiOffscreenCanvas::initPersistFields()
    addField( "targetName", TypeRealString, Offset( mTargetName, GuiOffscreenCanvas ), "");
    addField( "dynamicTarget", TypeBool, Offset( mDynamicTarget, GuiOffscreenCanvas ), "");
    addField( "useDepth", TypeBool, Offset( mUseDepth, GuiOffscreenCanvas ), "");
+   addField( "canInteract", TypeBool, Offset( mCanInteract, GuiOffscreenCanvas ), "If true the user can interact with this object via crosshair and mouse click when the canvas is rendered on a TSShapeInstance.");
+   addField( "maxInteractDistance", TypeF32, Offset( mMaxInteractDistance, GuiOffscreenCanvas ), "The camera must be within this distance to enable user interaction with the canvas if canInteract is true.");
+   addField( "renderCount", TypeS32, Offset( mRenderCount, GuiOffscreenCanvas ), "");
 
    Parent::initPersistFields();
+}
+
+GuiOffscreenCanvas *GuiOffscreenCanvas::getCanvasFromRayInfo(RayInfo &info)
+{
+   if (sList.size() > 0)
+   {
+      MatInstance* matInst = dynamic_cast<MatInstance*>(info.material);
+      if (matInst)
+      {
+         Material* testMat = matInst->getMaterial();
+         if (testMat && testMat->mDiffuseMapFilename[0].startsWith("#"))
+         {
+            String testName = testMat->mDiffuseMapFilename[0].substr(1);
+            for (S32 i = 0; i < sList.size(); ++i)
+            {
+               if (sList[i]->getTarget()->getName() == testName)
+                  return sList[i];
+            }
+         }
+      }
+   }
+   return NULL;
 }
 
 bool GuiOffscreenCanvas::onAdd()
@@ -43,6 +77,10 @@ bool GuiOffscreenCanvas::onAdd()
       // ensure that we have a cursor
       setCursor(dynamic_cast<GuiCursor*>(Sim::findObject("DefaultCursor")));
       
+      GuiCanvas* cv = dynamic_cast<GuiCanvas*>(Sim::findObject("Canvas"));
+      if (cv)
+         mPlatformWindow = cv->getPlatformWindow();
+
       mRenderFront = true;
       sList.push_back(this);
 
@@ -69,6 +107,9 @@ void GuiOffscreenCanvas::onRemove()
    {
       sList.erase(idx);
    }
+
+   if (isActiveCanvas())
+      sActiveOffscreenCanvas = NULL;
 
    mTarget = NULL;
    mTargetTexture = NULL;
@@ -204,7 +245,7 @@ void GuiOffscreenCanvas::renderFrame(bool preRenderOnly, bool bufferSwap /* = tr
 
       // Fill Blue if no Dialogs
       if(this->size() == 0)
-         GFX->clear( GFXClearTarget, LinearColorF(0,0,0,1), 1.0f, 0 );
+         GFX->clear( GFXClearTarget, LinearColorF(0,0,0.5f,0.5f), 1.0f, 0 );
 
       GFX->setClipRect( contentRect );
 
@@ -236,7 +277,7 @@ void GuiOffscreenCanvas::renderFrame(bool preRenderOnly, bool bufferSwap /* = tr
 
 void GuiOffscreenCanvas::onFrameRendered()
 {
-
+   mRenderCount++;
 }
 
 Point2I GuiOffscreenCanvas::getWindowSize()
@@ -253,6 +294,15 @@ void GuiOffscreenCanvas::setCursorPos(const Point2I &pt)
 {
    mCursorPt.x = F32( pt.x );
    mCursorPt.y = F32( pt.y );
+}
+
+void GuiOffscreenCanvas::setCursorPosFromUV(const Point2F &pt)
+{
+   Point2F oldPt = mCursorPt;
+   mCursorPt.x = mRound(mClampF( mTargetSize.x - (pt.x * mTargetSize.x), 0.0f, (F32) mTargetSize.x ));
+   mCursorPt.y = mRound(mClampF( mTargetSize.y - (pt.y * mTargetSize.y), 0.0f, (F32) mTargetSize.y ));
+   if (oldPt != mCursorPt)
+      markDirty();
 }
 
 void GuiOffscreenCanvas::showCursor(bool state)
@@ -279,6 +329,30 @@ void GuiOffscreenCanvas::_onTextureEvent( GFXTexCallbackCode code )
    }
 }
 
+void GuiOffscreenCanvas::setCanvasActive(bool active)
+{
+   if (active)
+      sActiveOffscreenCanvas = this;
+   else
+   {
+      if (isActiveCanvas())
+         sActiveOffscreenCanvas = NULL;
+
+      if (mPlatformWindow && mPlatformWindow->getKeyboardTranslation())
+         mPlatformWindow->setKeyboardTranslation(false);
+   }
+}
+
+void GuiOffscreenCanvas::dumpTarget(const char *filename)
+{
+    mTargetTexture->dumpToDisk("PNG", filename);
+}
+
+DefineEngineMethod(GuiOffscreenCanvas, dumpTarget, void, (const char *filename), , "Saves the render target texture as a png.")
+{
+    object->dumpTarget(filename);
+}
+
 DefineEngineMethod(GuiOffscreenCanvas, resetTarget, void, (), , "")
 {
    object->_setupTargets();
@@ -289,3 +363,12 @@ DefineEngineMethod(GuiOffscreenCanvas, markDirty, void, (), , "")
    object->markDirty();
 }
 
+DefineEngineMethod(GuiOffscreenCanvas, isActiveCanvas, bool, (), , "")
+{
+   return object->isActiveCanvas();
+}
+
+DefineEngineMethod(GuiOffscreenCanvas, setActiveCanvas, void, (bool active), ( false ), "Sets the canvas active for keyboard/mouse input.")
+{
+   object->setCanvasActive(active);
+}
