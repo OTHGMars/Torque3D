@@ -30,10 +30,12 @@
 #include "T3D/shapeBase.h"
 #include "gfx/gfxDrawUtil.h"
 #include "console/engineAPI.h"
+#include "gui/core/guiOffscreenCanvas.h"
+#include "T3D/tsStatic.h"
 
 
 //-----------------------------------------------------------------------------
-/// Vary basic cross hair hud.
+/// Very basic cross hair hud.
 /// Uses the base bitmap control to render a bitmap, and decides whether
 /// to draw or not depending on the current control object and it's state.
 /// If there is ShapeBase object under the cross hair and it's named,
@@ -47,14 +49,24 @@ class GuiCrossHairHud : public GuiBitmapCtrl
    Point2I  mDamageRectSize;
    Point2I  mDamageOffset;
 
+   F32 mMaxInteractDistance;
+   bool mReticleCursor;
+   S32 mUpdateDelay;
+   PlatformTimer* mFrameTime;
+   GuiOffscreenCanvas* mInteractCanvas;
+
 protected:
    void drawDamage(Point2I offset, F32 damage, F32 opacity);
+   bool testCanvasInteraction(const Point3F &start, const Point3F &end, const RayInfo &info, GameBase* control);
 
 public:
    GuiCrossHairHud();
+   ~GuiCrossHairHud();
 
    void onRender( Point2I, const RectI &);
    static void initPersistFields();
+
+   DECLARE_CALLBACK( void, onStartCanvasInteract, ( GuiOffscreenCanvas *pCanvas ) );
    DECLARE_CONOBJECT( GuiCrossHairHud );
    DECLARE_CATEGORY( "Gui Game" );
    DECLARE_DESCRIPTION( "Basic cross hair hud. Reacts to state of control object.\n"
@@ -89,12 +101,29 @@ ConsoleDocClass( GuiCrossHairHud,
    "@ingroup GuiGame\n"
 );
 
+IMPLEMENT_CALLBACK( GuiCrossHairHud, onStartCanvasInteract, void, ( GuiOffscreenCanvas *pCanvas ), ( pCanvas ),
+   "Called whenever the crosshair enters or leaves an interactable offscreen canvas and the control object is "
+   "within the interact distance for that object and for the GuiCrossHairHud.\n\n"
+   "@param pCanvas The canvas the crosshair is over or NULL when the crosshair leaves the target." );
+
 GuiCrossHairHud::GuiCrossHairHud()
 {
    mDamageFillColor.set( 0.0f, 1.0f, 0.0f, 1.0f );
    mDamageFrameColor.set( 1.0f, 0.6f, 0.0f, 1.0f );
    mDamageRectSize.set(50, 4);
    mDamageOffset.set(0,32);
+
+   mMaxInteractDistance = 0.0f;
+   mReticleCursor = false;
+   mUpdateDelay = 16;
+
+   mFrameTime = PlatformTimer::create();
+   mInteractCanvas = NULL;
+}
+
+GuiCrossHairHud::~GuiCrossHairHud()
+{
+   SAFE_DELETE(mFrameTime);
 }
 
 void GuiCrossHairHud::initPersistFields()
@@ -105,6 +134,19 @@ void GuiCrossHairHud::initPersistFields()
    addField( "damageRect", TypePoint2I, Offset( mDamageRectSize, GuiCrossHairHud ), "Size for the health bar portion of the control." );
    addField( "damageOffset", TypePoint2I, Offset( mDamageOffset, GuiCrossHairHud ), "Offset for drawing the damage portion of the health control." );
    endGroup("Damage");
+
+   addGroup("Canvas Interaction");
+   addField("maxInteractDistance", TypeF32, Offset(mMaxInteractDistance, GuiCrossHairHud),
+      "(default 0) If the reticle is over a TSStatic object, it must be within this distance to be checked for canvas textures. "
+      "Set this value to 0 to disable all offscreen canvas interaction.");
+   addField("showCursorAsReticle", TypeBool, Offset(mReticleCursor, GuiCrossHairHud),
+      "(default false) If true, the cursor from the offscreen canvas will be rendered as the reticle "
+      "with the 'hotspot' at the center of the extent when over an offscreen canvas. If false, the "
+      "reticle will be hidden and the offscreen canvas will need to render it's own cursor.");
+   addField("canvasUpdateMS", TypeS32, Offset(mUpdateDelay, GuiCrossHairHud),
+      "(default 16) Sets the offscreen canvas check/update frequency. This is the minimum time "
+      "between raycasts to offscreen canvases. Set to 0 to update every frame.");
+   endGroup("Canvas Interaction");
    Parent::initPersistFields();
 }
 
@@ -121,9 +163,6 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
    if (!control || !(control->getTypeMask() & ObjectMask) || !conn->isFirstPerson())
       return;
 
-   // Parent render.
-   Parent::onRender(offset,updateRect);
-
    // Get control camera info
    MatrixF cam;
    Point3F camPos;
@@ -138,11 +177,41 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
 
    // Collision info. We're going to be running LOS tests and we
    // don't want to collide with the control object.
-   static U32 losMask = TerrainObjectType | ShapeBaseObjectType;
+   static U32 losMask = TerrainObjectType | ShapeBaseObjectType | StaticShapeObjectType;
    control->disableCollision();
 
    RayInfo info;
-   if (gClientContainer.castRay(camPos, endPos, losMask, &info)) {
+   bool rayHit = gClientContainer.castRay(camPos, endPos, losMask, &info);
+
+   // Restore control object collision
+   control->enableCollision();
+
+   if (rayHit && (mMaxInteractDistance > info.distance) && testCanvasInteraction(camPos, endPos, info, control))
+   {  // If the ray hit an offscreen canvas, skip out on rendering the crosshair
+      if (mReticleCursor)
+      {  // Draw the mouse cursor at the reticle center
+         GuiCursor* mouseCursor = mInteractCanvas->getMouseCursor();
+         if (mouseCursor)
+         {
+            Point2I pos((S32)offset.x + updateRect.extent.x /2, (S32)offset.y + updateRect.extent.y / 2);
+            Point2I spot = mouseCursor->getHotSpot();
+            pos -= spot;
+            mouseCursor->render(pos);
+         }
+      }
+      return;
+   }
+   else if (mInteractCanvas)
+   {
+      onStartCanvasInteract_callback(NULL);
+      mInteractCanvas = NULL;
+   }
+
+   // Parent render.
+   Parent::onRender(offset,updateRect);
+
+   if (rayHit)
+   {
       // Hit something... but we'll only display health for named
       // ShapeBase objects.  Could mask against the object type here
       // and do a static cast if it's a ShapeBaseObjectType, but this
@@ -154,9 +223,6 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
             drawDamage(offset + mDamageOffset, obj->getDamageValue(), 1);
          }
    }
-
-   // Restore control object collision
-   control->enableCollision();
 }
 
 
@@ -188,4 +254,45 @@ void GuiCrossHairHud::drawDamage(Point2I offset, F32 damage, F32 opacity)
       rect.extent.x = 2;
    if (rect.extent.x > 0)
       GFX->getDrawUtil()->drawRectFill(rect, mDamageFillColor.toColorI());
+}
+
+bool GuiCrossHairHud::testCanvasInteraction(const Point3F &startPos, const Point3F &endPos, const RayInfo &info, GameBase* control)
+{
+   if (mFrameTime->getElapsedMs() > mUpdateDelay)
+   {
+      mFrameTime->reset();
+      GuiOffscreenCanvas* currentCanvas = mInteractCanvas;
+      mInteractCanvas = NULL;
+
+      TSStatic* obj = dynamic_cast<TSStatic*>(info.object);
+      if (obj)
+      {
+         Point3F xformedStart, xformedEnd;
+         obj->getWorldTransform().mulP(startPos, &xformedStart);
+         obj->getWorldTransform().mulP(endPos, &xformedEnd);
+         xformedStart.convolveInverse(obj->getScale());
+         xformedEnd.convolveInverse(obj->getScale());
+
+         RayInfo localInfo;
+         localInfo.generateTexCoord = true;
+         if (obj->getShapeInstance()->castRayOpcode(0, xformedStart, xformedEnd, &localInfo))
+         {
+            GuiOffscreenCanvas *pCanvas = GuiOffscreenCanvas::getCanvasFromRayInfo(localInfo);
+            if (pCanvas && pCanvas->canInteract() && info.distance < pCanvas->getMaxInteractDistance())
+            {
+               if (currentCanvas != pCanvas)
+                  onStartCanvasInteract_callback(pCanvas);
+
+               pCanvas->setCursorPosFromUV(localInfo.texCoord);
+               mInteractCanvas = pCanvas;
+            }
+         }
+      }
+
+      if (currentCanvas && !mInteractCanvas)
+         onStartCanvasInteract_callback(NULL);
+
+   }
+
+   return (mInteractCanvas != NULL);
 }
