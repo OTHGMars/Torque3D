@@ -649,7 +649,7 @@ moveMap.bind(keyboard, "F7", dropPlayerAtCamera);
 function bringUpOptions(%val)
 {
    if (%val)
-      Canvas.pushDialog(OptionsDlg);
+      $GameCanvas.pushDialog(OptionsDlg);
 }
 
 GlobalActionMap.bind(keyboard, "ctrl o", bringUpOptions);

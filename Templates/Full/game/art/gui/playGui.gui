@@ -143,8 +143,8 @@
       Profile = "GuiModelessDialogProfile";
       HorizSizing = "center";
       VertSizing = "center";
-      position = "496 368";
-      Extent = "32 32";
+      position = "480 352";
+      Extent = "64 64";
       MinExtent = "8 8";
       canSave = "1";
       Visible = "1";
