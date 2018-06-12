@@ -25,7 +25,7 @@ extern SteamAPI *gSteamAPI;
 
 void SteamAPI::initUserStats()
 {
-   mNumAchievements = SteamUserStats()->GetNumAchievements();
+   mStatsLoaded = true;
 }
 
 bool SteamAPI::requestCurrentStats()
@@ -46,6 +46,14 @@ bool SteamAPI::setAchievement(const char* apiName)
       return false;
 
    return SteamUserStats()->SetAchievement(apiName);
+}
+
+bool SteamAPI::clearAchievement(const char* apiName)
+{
+   if (!mIsSteamRunning || !mStatsLoaded || !apiName)
+      return false;
+
+   return SteamUserStats()->ClearAchievement(apiName);
 }
 
 bool SteamAPI::storeStats()
@@ -92,6 +100,14 @@ const char* SteamAPI::getAchievementDisplayAttribute(const char* apiName, const 
    return SteamUserStats()->GetAchievementDisplayAttribute(apiName, attributeKey);
 }
 
+bool SteamAPI::resetAllStats(bool achievementsToo)
+{
+   if (!mIsSteamRunning || !mStatsLoaded)
+      return false;
+
+   return SteamUserStats()->ResetAllStats(achievementsToo);
+}
+
 //-----------------------------------------------------------------------------
 DefineEngineStaticMethod(SteamAPI, areStatsLoaded, bool, (), ,
    "@brief Returns true if a requestStats command has successfully completed for the "
@@ -124,6 +140,21 @@ DefineEngineStaticMethod(SteamAPI, setAchievement, bool, (const char* apiName), 
       return false;
 
    return gSteamAPI->setAchievement(apiName);
+}
+
+DefineEngineStaticMethod(SteamAPI, clearAchievement, bool, (const char* apiName), ,
+   "Resets the unlock status of an achievement. This is primarily only ever used for "
+   "testing. This will save the stat change locally. Call SteamAPI::StoreStats() to "
+   "upload to the server.\n\n"
+   "@param apiName The 'apiName' for the achievement set in the steam App Admin panel.\n"
+   "@return True if the achievement was reset to locked. False if there was any error."
+   "@see https://partner.steamgames.com/doc/api/ISteamUserStats#ClearAchievement"
+   "@ingroup Steam")
+{
+   if (!gSteamAPI)
+      return false;
+
+   return gSteamAPI->clearAchievement(apiName);
 }
 
 DefineEngineStaticMethod(SteamAPI, storeStats, bool, (), ,
@@ -192,3 +223,22 @@ DefineEngineStaticMethod(SteamAPI, getAchievementDisplayAttribute, const char*, 
 
    return gSteamAPI->getAchievementDisplayAttribute(apiName, attributeKey);
 }
+
+DefineEngineStaticMethod(SteamAPI, resetAllStats, bool, (bool achievementsToo), ,
+   "Resets the current users stats and, optionally achievements. This automatically "
+   "calls StoreStats to persist the changes to the server. This should typically only "
+   "be used for testing purposes during development. Ensure that you sync up your "
+   "stats with the new default values provided by Steam after calling this by calling "
+   "RequestCurrentStats.\n\n"
+   "@param achievementsToo True if achievements should all be reset to locked. False "
+   "if only stats should be reset.\n"
+   "@return True if the stats were reset. False if there was any error."
+   "@see https://partner.steamgames.com/doc/api/ISteamUserStats#ResetAllStats"
+   "@ingroup Steam")
+{
+   if (!gSteamAPI)
+      return false;
+
+   return gSteamAPI->resetAllStats(achievementsToo);
+}
+

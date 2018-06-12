@@ -38,16 +38,6 @@
 class SteamCallbacks;
 class SteamAPI
 {
-   struct Achievement_t
-   {
-      //U32 m_eAchievementID;
-      const char *m_pchAchievementID;
-      char m_rgchName[128];
-      char m_rgchDescription[256];
-      bool m_bAchieved;
-      int m_iIconImage;
-   };
-
 private:
    SteamCallbacks* mCallbacks;
    bool mIsSteamRunning;
@@ -55,7 +45,6 @@ private:
    U32 mTics;
 
    bool mStatsLoaded;
-   U32 mNumAchievements;
 
 public:
    DECLARE_STATIC_CLASS( SteamAPI );
@@ -80,11 +69,13 @@ public:
    // ISteamUserStats interface
    bool requestCurrentStats();
    bool setAchievement(const char* apiName);
+   bool clearAchievement(const char* apiName);
    bool storeStats();
    U32 getNumAchievements();
    const char* getAchievementName(U32 idx);
    bool getAchievement(const char* apiName);
    const char* getAchievementDisplayAttribute(const char* apiName, const char* attributeKey);
+   bool resetAllStats(bool achievementsToo);
 };
 
 #endif
