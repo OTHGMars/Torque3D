@@ -34,6 +34,7 @@ const char* SteamAPI::getPersonaName()
 DefineEngineStaticMethod(SteamAPI, getPersonaName, String, (), ,
    "@brief Returns the local players name - guaranteed to not be NULL. "
    "This is the same name as on the users community profile page.\n\n"
+   "@see https://partner.steamgames.com/doc/api/ISteamFriends#GetPersonaName"
    "@ingroup Steam")
 {
    if (!gSteamAPI)

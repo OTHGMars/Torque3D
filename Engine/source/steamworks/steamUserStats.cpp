@@ -110,7 +110,7 @@ bool SteamAPI::resetAllStats(bool achievementsToo)
 
 //-----------------------------------------------------------------------------
 DefineEngineStaticMethod(SteamAPI, areStatsLoaded, bool, (), ,
-   "@brief Returns true if a requestStats command has successfully completed for the "
+   "@brief Returns true if a requestCurrentStats command has successfully completed for the "
    "current user.\n\n"
    "@ingroup Steamworks")
 {
@@ -195,7 +195,7 @@ DefineEngineStaticMethod(SteamAPI, getAchievementName, const char*, (U32 achieve
 }
 
 DefineEngineStaticMethod(SteamAPI, getAchievement, bool, (const char* apiName), ,
-   "Gets the unlock status of the Achievement.\n\n"
+   "Gets the unlock status of the achievement.\n\n"
    "@return True if the call was a success and the achievement is unlocked. False otherwise.\n"
    "@see https://partner.steamgames.com/doc/api/ISteamUserStats#GetAchievement"
    "@ingroup Steam")

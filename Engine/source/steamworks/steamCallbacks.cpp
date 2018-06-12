@@ -33,7 +33,7 @@ IMPLEMENT_GLOBAL_CALLBACK(onSteamGameOverlayActivated, void, (S32 isActive), (is
    "@ingroup Steam");
 
 IMPLEMENT_GLOBAL_CALLBACK(onSteamUserStatsReceived, void, (bool statsLoaded), (statsLoaded),
-   "Callback posted when the steam game overlay activates or deactivates.\n\n"
+   "Callback posted when the latests stats and achievements have been received from the server.\n\n"
    "@param statsLoaded True if the stats have been loaded. False if there was an "
    "error and no stats are available.\n"
    "@ingroup Steam");
