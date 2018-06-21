@@ -35,6 +35,8 @@ private:
    STEAM_CALLBACK(SteamCallbacks, OnUserStatsReceived, UserStatsReceived_t, m_CallbackUserStatsReceived);
    STEAM_CALLBACK(SteamCallbacks, OnUserStatsStored, UserStatsStored_t, m_CallbackUserStatsStored);
    STEAM_CALLBACK(SteamCallbacks, OnAchievementStored, UserAchievementStored_t, m_CallbackAchievementStored);
+
+   STEAM_CALLBACK(SteamCallbacks, OnGamepadTextInputDismissed, GamepadTextInputDismissed_t, m_CallbackGamepadTextInputDismissed);
 };
 
 #endif // _STEAMCALLBACKS_H_

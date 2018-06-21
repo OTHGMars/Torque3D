@@ -55,12 +55,22 @@ IMPLEMENT_GLOBAL_CALLBACK(onSteamAchievementStored, void,
    "@param maxProgress The total amount of progress required to unlock.\n"
    "@ingroup Steam");
 
+IMPLEMENT_GLOBAL_CALLBACK(onSteamTextInputDismissed, void,
+(bool wasTextSubmitted, const char* newText, U32 textLength),
+(wasTextSubmitted, newText, textLength),
+   "Callback posted when the Big Picture text input dialog has been dismissed.\n\n"
+   "@param wasTextSubmitted True if text was entered and the dialog was submitted. False if it was canceled.\n"
+   "@param newText The text that was submitted. Null if the dialog was canceled.\n"
+   "@param textLength The length of the entered text.\n"
+   "@ingroup Steam");
+
 //------------------------------------------------------------------------------
 SteamCallbacks::SteamCallbacks() :
    m_CallbackGameOverlayActivated(this, &SteamCallbacks::OnGameOverlayActivated),
    m_CallbackUserStatsReceived(this, &SteamCallbacks::OnUserStatsReceived),
    m_CallbackUserStatsStored(this, &SteamCallbacks::OnUserStatsStored),
-   m_CallbackAchievementStored(this, &SteamCallbacks::OnAchievementStored)
+   m_CallbackAchievementStored(this, &SteamCallbacks::OnAchievementStored),
+   m_CallbackGamepadTextInputDismissed(this, &SteamCallbacks::OnGamepadTextInputDismissed)
 {
 
 }
@@ -97,4 +107,18 @@ void SteamCallbacks::OnAchievementStored(UserAchievementStored_t* pCallback)
       onSteamAchievementStored_callback(isUnlocked, pCallback->m_rgchAchievementName,
          pCallback->m_nCurProgress, pCallback->m_nMaxProgress);
    }
+}
+
+void SteamCallbacks::OnGamepadTextInputDismissed(GamepadTextInputDismissed_t* pCallback)
+{
+   static char pTextInput[TORQUE_STEAMWORKS_MAX_TEXT_INPUT];
+   bool success = false;
+   uint32 length = 0;
+   pTextInput[0] = '\0';
+   if (pCallback->m_bSubmitted)
+   {
+      length = SteamUtils()->GetEnteredGamepadTextLength();
+      success = SteamUtils()->GetEnteredGamepadTextInput(pTextInput, length);
+   }
+   onSteamTextInputDismissed_callback(success, pTextInput, length);
 }

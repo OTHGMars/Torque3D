@@ -89,5 +89,7 @@ if( UNIX AND NOT APPLE )
    INSTALL(FILES "${STEAMWORKS_LIBPATH}/${STEAMWORKS_LIBNAME}.so" DESTINATION "${projectOutDir}")
 endif()
 
-CONFIGURE_FILE("${srcDir}/steamworks/setup/steamConfig.h.in" "${srcDir}/steamworks/steamConfig.h")
+if(NOT EXISTS "${srcDir}/steamworks/steamConfig.h")
+    CONFIGURE_FILE("${srcDir}/steamworks/setup/steamConfig.h.in" "${srcDir}/steamworks/steamConfig.h")
+endif()
 CONFIGURE_FILE("${srcDir}/steamworks/setup/steam_appid.txt.in" "${projectOutDir}/steam_appid.txt")

@@ -25,7 +25,6 @@
 /// Steamworks App ID for this game.
 #define TORQUE_STEAMWORKS_APPID @TORQUE_STEAMWORKS_APPID@
 
-
 /// Define me if your game requires the steam client to be running in order to
 /// launch. If steam is required but not running, SteamAPI_RestartAppIfNecessary
 /// will be called and the game will be restarted after the steam client.
@@ -34,3 +33,7 @@
 /// SteamAPI_Init() will return false.
 #cmakedefine TORQUE_STEAMWORKS_REQUIRED
 
+/// The maximum length of text that can be entered into the Big Picture text input dialog
+/// You set the maximum text length for each instance of the dialog, but it cannot be
+/// greater than this value.
+#define TORQUE_STEAMWORKS_MAX_TEXT_INPUT 256

@@ -76,6 +76,15 @@ public:
    bool getAchievement(const char* apiName);
    const char* getAchievementDisplayAttribute(const char* apiName, const char* attributeKey);
    bool resetAllStats(bool achievementsToo);
+
+   // ISteamUtil interface
+   bool isOverlayEnabled();
+   bool isSteamInBigPictureMode();
+   bool isSteamRunningInVR();
+   void setOverlayNotificationPosition(ENotificationPosition newPos);
+   void setOverlayNotificationInset(int nHorizontalInset, int nVerticalInset);
+   bool showGamepadTextInput(EGamepadTextInputMode eInputMode, EGamepadTextInputLineMode eLineInputMode,
+      const char* pchDescription, uint32 unCharMax, const char* pchExistingText);
 };
 
 #endif
