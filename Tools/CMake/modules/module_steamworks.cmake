@@ -24,6 +24,7 @@
 
 option(TORQUE_STEAMWORKS "Add Steamworks API plugin" OFF)
 option(TORQUE_STEAMWORKS_REQUIRED "Check if the engine should not launch without the steam client running." OFF)
+option(TORQUE_STEAMWORKS_INPUT "Check if the SteamController module should be installed." OFF)
 
 if(APPLE AND TORQUE_STEAMWORKS)
    message(FATAL_ERROR "Apple operating systems are not yet supported with the Torque3D Steamworks API plugin.")
@@ -55,6 +56,9 @@ endif()
 
 # Source
 addPath( "${srcDir}/steamworks" )
+if( TORQUE_STEAMWORKS_INPUT )
+    addPath( "${srcDir}/steamworks/steamInput" )
+endif()
 
 # Includes
 addInclude( "${TORQUE_STEAMWORKS_SDKPATH}/public/steam" )
@@ -93,3 +97,13 @@ if(NOT EXISTS "${srcDir}/steamworks/steamConfig.h")
     CONFIGURE_FILE("${srcDir}/steamworks/setup/steamConfig.h.in" "${srcDir}/steamworks/steamConfig.h")
 endif()
 CONFIGURE_FILE("${srcDir}/steamworks/setup/steam_appid.txt.in" "${projectOutDir}/steam_appid.txt")
+
+if(TORQUE_STEAMWORKS_INPUT)
+    file(GLOB_RECURSE SI_INSTALL_FILES_AND_DIRS "${CMAKE_SOURCE_DIR}/Templates/Modules/steamworks/*")
+
+    foreach(ITEM ${SI_INSTALL_FILES_AND_DIRS})
+        get_filename_component( dir ${ITEM} DIRECTORY )
+        STRING(REGEX REPLACE "${CMAKE_SOURCE_DIR}/Templates/Modules/" "${projectOutDir}/data/" INSTALL_DIR ${dir})
+        install( FILES ${ITEM} DESTINATION ${INSTALL_DIR} )
+    endforeach()
+endif()
