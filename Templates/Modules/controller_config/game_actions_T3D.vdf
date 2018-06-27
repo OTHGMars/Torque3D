@@ -1,0 +1,156 @@
+"In Game Actions"
+{
+	"actions"
+	{
+		"MenuControls"
+		{
+			"title"		"#Set_Menu"
+			"StickPadGyro"
+			{
+				"menu_mouse"
+				{
+					"title"			"#Menu_Mouse"
+					"input_mode"	"absolute_mouse"
+					"os_mouse"		"1"
+				}
+			}
+			"AnalogTrigger"
+			{
+			}
+			"Button"
+			{
+				"menu_lmb"			"#Menu_LMB"
+				"menu_rmb"			"#Menu_RMB"
+				"menu_up"			"#Menu_Up"
+				"menu_down"			"#Menu_Down"
+				"menu_left"			"#Menu_Left"
+				"menu_right"		"#Menu_Right"
+				"menu_next"			"#Menu_Next"
+				"menu_last"			"#Menu_Last"
+				"menu_back"			"#Menu_Back"
+				"menu_select"		"#Menu_Select"
+				"menu_submit"		"#Menu_Submit"
+				"menu_cancel"		"#Menu_Cancel"
+				"menu_menu"			"#Menu_ReturnToGame"
+			}
+		}
+		"PlayerControls"
+		{
+			"title"		"#Set_Player"
+			"StickPadGyro"
+			{
+				"player_move"
+				{
+					"title"				"#Player_Move"
+					"input_mode"		"joystick_move"
+				}
+				"player_camera"
+				{
+					"title"				"#Player_Camera"
+					"input_mode"		"absolute_mouse"
+				}
+			}
+			"Button"
+			{
+				"player_fire"			"#Player_Fire"
+				"player_altfire"		"#Player_AltFire"
+				"player_jump"			"#Player_Jump"
+				"player_crouch"			"#Player_Crouch"
+				"player_sprint"			"#Player_Sprint"
+				"player_weapup"			"#Player_WeaponUp"
+				"player_weapdown"		"#Player_WeaponDown"
+				"player_weapreload"		"#Player_WeaponReload"
+				"player_tossweapon"		"#Player_TossWeapon"
+				"player_tossammo"		"#Player_TossAmmo"
+				"player_carjack"		"#Player_CarJack"
+				"player_camtoggle"		"#Player_CamToggle"
+				"player_freelook"		"#Player_FreeLook"
+				"player_zoom"			"#Player_Zoom"
+				"player_interact"		"#Player_Interact"
+				"player_menu"		    "#Player_Menu"
+			}
+		}
+		"VehicleControls"
+		{
+			"title"		"#Set_Vehicle"
+			"StickPadGyro"
+			{
+				"vehicle_steer"
+				{
+					"title"				"#Vehicle_Steer"
+					"input_mode"		"joystick_move"
+				}
+			}
+			"AnalogTrigger"
+			{
+				"vehicle_throttle"		"#Vehicle_Throttle"
+				"vehicle_reverse"		"#Vehicle_Reverse"
+			}
+			"Button"
+			{
+				"vehicle_fire"			"#Vehicle_Fire"
+				"vehicle_altfire"		"#Vehicle_AltFire"
+				"vehicle_brake"			"#Vehicle_Brake"
+				"vehicle_brakelight"	"#Vehicle_BrakeLight"
+				"vehicle_getout"		"#Vehicle_GetOut"
+				"vehicle_flipcar"		"#Vehicle_FlipCar"
+				"vehicle_camtoggle"		"#Vehicle_CamToggle"
+				"vehicle_freelook"		"#Vehicle_FreeLook"
+				"vehicle_menu"		    "#Vehicle_Menu"
+			}
+		}
+	}
+	"localization"
+	{
+		"english"
+		{
+			"Set_Menu"				"Menu Controls"
+			"Set_Player"			"Player Controls"
+			"Set_Vehicle"		"Vehicle Controls"
+			"Menu_Mouse"			"Mouse"
+			"Menu_LMB"				"Left Mouse Button"
+			"Menu_RMB"				"Right Mouse Button"
+			"Menu_Up"				"Up"
+			"Menu_Down"				"Down"
+			"Menu_Left"				"Left"
+			"Menu_Right"			"Right"
+			"Menu_Next"			    "Next Field"
+			"Menu_Last"			    "Last Field"
+			"Menu_Back"			    "Back"
+			"Menu_Select"			"Select"
+			"Menu_Submit"			"Submit"
+			"Menu_Cancel"			"Cancel"
+			"Menu_ReturnToGame"	"Bindings Panel"
+			"Player_Move"			"Movement"
+			"Player_Camera"			"Camera"
+			"Player_Fire"			"Fire Weapon"
+			"Player_AltFire"		"Fire Alternate"
+			"Player_Jump"			"Jump"
+			"Player_Crouch"			"Crouch"
+			"Player_Sprint"			"Sprint"
+			"Player_WeaponUp"		"Cycle Weapon Last"
+			"Player_WeaponDown"		"Cycle Weapon Next"
+			"Player_WeaponReload"	"Reload"
+			"Player_TossWeapon"		"Drop Weapon"
+			"Player_TossAmmo"		"Drop Ammo"
+			"Player_CarJack"		"Car Jack"
+			"Player_CamToggle"		"1st/3rd Person"
+			"Player_FreeLook"		"Free Look"
+			"Player_Zoom"			"Zoom"
+			"Player_Interact"		"Interact"
+			"Player_Menu"		"Pause Menu"
+			"Vehicle_Steer"			"Steering"
+			"Vehicle_Throttle"		"Throttle"
+			"Vehicle_Reverse"		"Reverse Throttle"
+			"Vehicle_Fire"			"Fire Weapon"
+			"Vehicle_AltFire"		"Fire Alternate"
+			"Vehicle_Brake"			"Brakes"
+			"Vehicle_BrakeLight"	"Brake Lights"
+			"Vehicle_GetOut"		"Get Out"
+			"Vehicle_FlipCar"		"Flip Car"
+			"Vehicle_CamToggle"		"1st/3rd Person"
+			"Vehicle_FreeLook"		"Free Look"
+			"Vehicle_Menu"		"Pause Menu"
+		}
+	}
+}
