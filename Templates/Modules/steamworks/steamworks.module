@@ -1,0 +1,9 @@
+<ModuleDefinition
+	ModuleId="steamworks"
+	VersionId="1"
+	Description="Steamworks API Module."
+	ScriptFile="steamworks.cs"
+	CreateFunction="create"
+	DestroyFunction="destroy"
+	Group="Game">
+</ModuleDefinition>
