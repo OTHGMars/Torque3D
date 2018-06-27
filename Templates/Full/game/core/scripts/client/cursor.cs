@@ -62,11 +62,15 @@ function GuiCanvas::checkCursor(%this)
       if ((%control.noCursor $= "") || !%control.noCursor)
       {
          showCursor();
+         if (isFunction("isSteamInputInitialized") && isSteamInputInitialized() && isObject(steamworks))
+            steamworks.activateActionSet("Menu");
          return true;
       }
    }
    // If we get here, every control requested a hidden cursor, so we oblige.
    hideCursor();
+   if (isFunction("isSteamInputInitialized") && isSteamInputInitialized() && isObject(steamworks))
+      steamworks.activateActionSet($Steam::CurrentActionSet);
    return false;
 }
 

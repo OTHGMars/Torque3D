@@ -252,7 +252,8 @@ else {
    onStart();
    echo("Engine initialized...");
 
-   ModuleDatabase.scanModules( "" );
+   ModuleDatabase.setModuleExtension("module");
+   ModuleDatabase.scanModules( "", false );
 
    //You can also explicitly decalre some modules here to be loaded by default if they are part of your game
    //Ex: ModuleDatabase.LoadExplicit( "AppCore" );

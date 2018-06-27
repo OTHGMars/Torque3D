@@ -757,6 +757,11 @@ function getOut()
 {
    vehicleMap.pop();
    moveMap.push();
+   if (isFunction("isSteamInputInitialized") && isSteamInputInitialized() && isObject(steamworks))
+   {
+      steamworks.activateActionSet("Player");
+      $Steam::CurrentActionSet = "Player";
+   }
    commandToServer('dismountVehicle');
 }
 

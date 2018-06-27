@@ -42,6 +42,11 @@ function PlayGui::onWake(%this)
    
    // just update the action map here
    moveMap.push();
+   if (isFunction("isSteamInputInitialized") && isSteamInputInitialized() && isObject(steamworks))
+   {
+      steamworks.activateActionSet("Player");
+      $Steam::CurrentActionSet = "Player";
+   }
 
    // hack city - these controls are floating around and need to be clamped
    if ( isFunction( "refreshCenterTextCtrl" ) )
@@ -57,6 +62,12 @@ function PlayGui::onSleep(%this)
    
    // pop the keymaps
    moveMap.pop();
+
+   if (isFunction("isSteamInputInitialized") && isSteamInputInitialized() && isObject(steamworks))
+   {
+      steamworks.activateActionSet("Menu");
+      $Steam::CurrentActionSet = "Menu";
+   }
 }
 
 function PlayGui::clearHud( %this )

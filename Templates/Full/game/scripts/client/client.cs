@@ -149,11 +149,21 @@ function clientCmdtoggleVehicleMap(%toggle)
 	  $mvForwardAction = 0;
 	  $mvBackwardAction = 0;
       vehicleMap.push();
+      if (isFunction("isSteamInputInitialized") && isSteamInputInitialized() && isObject(steamworks))
+      {
+         steamworks.activateActionSet("Vehicle");
+         $Steam::CurrentActionSet = "Vehicle";
+      }
    }
    else
    {
       vehicleMap.pop();
       moveMap.push();
+      if (isFunction("isSteamInputInitialized") && isSteamInputInitialized() && isObject(steamworks))
+      {
+         steamworks.activateActionSet("Player");
+         $Steam::CurrentActionSet = "Player";
+      }
    }
 }
 
