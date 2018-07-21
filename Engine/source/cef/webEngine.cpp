@@ -30,6 +30,7 @@
 #include "gui/core/guiCanvas.h"
 #include "gui/core/guiControl.h"
 #include "sim/actionMap.h"
+#include "SDL_keyboard.h"
 
 #include "include/cef_client.h"
 #include "include/cef_render_handler.h"
@@ -243,9 +244,8 @@ void WebEngine::process()
 //------------------------------------------------------------------------------
 U16 WebEngine::asciiFromTorqueCode(S32 keyCode, bool shiftDown)
 {
-   U16 asciiChar = Input::getAscii(keyCode, shiftDown ? STATE_UPPER : STATE_LOWER);
-   if (asciiChar > 0)
-      return asciiChar;
+   if (keyCode >= KEY_ANYKEY)
+      return 0;
 
    switch (keyCode)
    {
@@ -261,7 +261,16 @@ U16 WebEngine::asciiFromTorqueCode(S32 keyCode, bool shiftDown)
       break;
    }
 
-   return 0;
+   U32 SDLKey = SDL_GetKeyFromScancode( (SDL_Scancode)keyCode );
+   const char *text = SDL_GetKeyName( SDLKey );
+   if(!text || text[1] != 0)
+      return 0;
+   U8 ret = text[0];
+
+   if( dIsalpha(ret) )
+      return shiftDown ? dToupper( ret ) : dTolower( ret );
+
+   return ret;
 }
 
 //------------------------------------------------------------------------------

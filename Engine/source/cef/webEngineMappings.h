@@ -41,9 +41,9 @@ const U8 WebEngine::VKToTorque[] =
    KEY_RETURN,          // 0x0D  VK_RETURN
    0,                   // 0x0E
    0,                   // 0x0F
-   KEY_SHIFT,           // 0x10  VK_SHIFT
-   KEY_CONTROL,         // 0x11  VK_CONTROL
-   KEY_ALT,             // 0x12  VK_MENU
+   0,                   // 0x10  VK_SHIFT
+   0,                   // 0x11  VK_CONTROL
+   0,                   // 0x12  VK_MENU
    KEY_PAUSE,           // 0x13  VK_PAUSE
    KEY_CAPSLOCK,        // 0x14  VK_CAPITAL
    0,                   // 0x15  VK_KANA, VK_HANGEUL, VK_HANGUL
@@ -122,8 +122,8 @@ const U8 WebEngine::VKToTorque[] =
    KEY_Z,               // 0x5A  VK_Z
 
 
-   KEY_WIN_LWINDOW,     // 0x5B  VK_LWIN
-   KEY_WIN_RWINDOW,     // 0x5C  VK_RWIN
+   0,                   // 0x5B  VK_LWIN
+   0,                   // 0x5C  VK_RWIN
    KEY_WIN_APPS,        // 0x5D  VK_APPS
    0,                   // 0x5E
    0,                   // 0x5F
