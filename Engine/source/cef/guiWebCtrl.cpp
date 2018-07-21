@@ -159,9 +159,9 @@ bool GuiWebCtrl::onWake()
       if (!mBrowser)
       {
          createBrowser(mStartURL.c_str());
+         if (mBrowser)
+            mBrowser->GetMainFrame()->LoadURL(mStartURL.c_str());
       }
-      //else
-      //   loadURL(mStartURL.c_str());
    }
 
    return true;
@@ -812,6 +812,12 @@ void GuiWebCtrl::loadURLPostRequest(const char* url, const char* reqData)
    mBrowser->GetMainFrame()->LoadRequest(request);
 }
 
+void GuiWebCtrl::getURL(String& url)
+{
+   if (mBrowser)
+      url = mBrowser->GetMainFrame()->GetURL().c_str();
+}
+
 void GuiWebCtrl::execJavaScript(const String &script, const String &iFrame)
 {
    if (!mBrowser)
@@ -875,6 +881,12 @@ void GuiWebCtrl::pageReload()
       mBrowser->Reload();
 }
 
+void GuiWebCtrl::pageStop()
+{
+   if (mBrowser && mBrowser->IsLoading())
+      mBrowser->StopLoad();
+}
+
 void GuiWebCtrl::onLoadingStateChange(bool isLoading, bool canGoBack, bool canGoForward)
 {
    mIsPageLoading = isLoading;
@@ -905,6 +917,14 @@ DefineEngineMethod(GuiWebCtrl, urlPost, void, (const char *url, const char *post
    "@endtsexample\n\n")
 {
    object->loadURLPostRequest(url, postData);
+}
+
+DefineEngineMethod(GuiWebCtrl, getURL, String, (), ,
+   "@brief Returns the url of the main frame loaded in the browser.\n\n")
+{
+   String url;
+   object->getURL(url);
+   return url;
 }
 
 DefineEngineMethod(GuiWebCtrl, execJavaScript, void, (const char *script, const char *iFrame), (""),
@@ -963,4 +983,10 @@ DefineEngineMethod(GuiWebCtrl, pageReload, void, (), ,
    "@brief Reload the current page.\n")
 {
    object->pageReload();
+}
+
+DefineEngineMethod(GuiWebCtrl, pageStop, void, (), ,
+   "@brief Stops the current page load.\n")
+{
+   object->pageStop();
 }
