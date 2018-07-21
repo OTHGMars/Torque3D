@@ -348,6 +348,8 @@ bool GuiWebCtrl::onInputEvent(const InputEventInfo &inputEvent)
                pageForward();
             else if (keyCode == WebEngine::browserReload)
                pageReload();
+            else if (keyCode == WebEngine::browserStop)
+               pageStop();
          }
          else
          {
