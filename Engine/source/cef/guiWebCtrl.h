@@ -116,12 +116,14 @@ public:
 
    void loadURL(const char* url);
    void loadURLPostRequest(const char* url, const char* reqData);
+   void getURL(String& url);
 
    void execJavaScript(const String &script, const String &iFrame);
    void touchPage(const Point2I &point);
    bool pageForward();
    bool pageBack();
    void pageReload();
+   void pageStop();
    void onLoadingStateChange(bool isLoading, bool canGoBack, bool canGoForward);
    void onLoadError(S32 errorCode, const char* errorText, const char* failedURL);
 
