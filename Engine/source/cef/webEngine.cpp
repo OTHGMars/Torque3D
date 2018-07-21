@@ -303,6 +303,8 @@ bool WebEngine::mapDeviceEvent(const char* deviceInst, const char* deviceAction,
       cefEventId = browserForward;
    else if (dStricmp(keyboardAction, "reload") == 0)
       cefEventId = browserReload;
+   else if (dStricmp(keyboardAction, "stop") == 0)
+      cefEventId = browserStop;
    else
    {
       if (!ActionMap::createEventDescriptor(keyboardAction, &keyDescriptor))
@@ -397,12 +399,12 @@ DefineEngineStaticMethod(WebEngine, mapDeviceEvent, bool, (const char* deviceIns
    "By mapping device events to keyboard navigation keys, you can navigate "
    "keyboard accessible webpages with controllers and other devices. The device "
    "and action strings use the same format that is used by ActionMap.\n"
-   "@param deviceInst The device for this acion 'gamepad', 'joystick'...\n"
-   "@param deviceAction Any description from gVirtualMap in platform/input/event "
+   "@param deviceInst The device for this action 'gamepad', 'joystick'...\n"
+   "@param deviceAction Any description from gVirtualMap in platform/input/event.cpp "
    "'btn_a', 'dpov', 'button0'...\n"
-   "@param keyboardAction Any description, with optional modifier, from gVirtualMap "
-   "in platform/input/event 'tab', 'shift tab', 'up'...etc. In addition to the keyboard events, the "
-   "three browser events are mappable with the strings 'goback', 'goforward' and 'reload'.\n\n"
+   "@param keyboardAction Any description, with optional modifier, from gKeyboardMap "
+   "in platform/input/event.cpp 'tab', 'shift tab', 'up'...etc. In addition to the keyboard events, the "
+   "4 browser events are mappable with the strings 'goback', 'goforward', 'reload' and 'stop'.\n\n"
 
    "@tsexample\n"
    "WebEngine::mapControllerEvent(\"gamepad0\", \"btn_r\", \"tab\");\n"

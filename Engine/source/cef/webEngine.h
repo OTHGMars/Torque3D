@@ -49,7 +49,8 @@ public:
    {
       browserBack = -1,
       browserForward = -2,
-      browserReload = -3
+      browserReload = -3,
+      browserStop = -4
    };
 
    struct CefKeyEvent
