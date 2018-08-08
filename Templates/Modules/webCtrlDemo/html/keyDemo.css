@@ -1,0 +1,108 @@
+html {
+    overflow:hidden;
+}
+
+body {
+    background-color:#0000b3bb;
+}
+
+h1 {
+    text-align: center;
+}
+.mybutton {
+    background-image: linear-gradient(to bottom, #34d9b8, #b8d934);
+    border-radius: 12px;
+    padding: 10px 20px 10px 20px;
+}
+
+.mybutton:hover {
+    background-image: linear-gradient(to bottom, #b8d934, #b800b8);
+    transition-duration: .2s;
+    -webkit-transition-duration: .2s; /* Safari */
+    transition: all .2s;
+    cursor: pointer;
+}
+
+.mybutton:active {
+    background-color: #3e8e41;
+    transform: translateY(2px) translateX(2px);
+    transition-duration: .1s;
+    -webkit-transition-duration: 0.1s; /* Safari */
+    transition: all 0.1s;
+    cursor: pointer;
+}
+
+input[type=range] {
+    appearance: none; /* Hides the slider so that custom slider can be made */
+    -webkit-appearance: none;
+    width: 100%; /* Specific width is required for Firefox. */
+    background: transparent; /* Otherwise white in Chrome */
+}
+
+input[type=range]::-webkit-slider-thumb {
+    appearance: none; /* Hides the slider so that custom slider can be made */
+    -webkit-appearance: none;
+}
+
+input[type=range]:focus {
+    outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+}
+
+input[type=range]::-ms-track {
+    width: 100%;
+    cursor: pointer;
+
+    /* Hides the slider so custom styles can be added */
+    background: transparent; 
+    border-color: transparent;
+    color: transparent;
+}
+
+/* Special styling for WebKit/Blink */
+input[type=range]::-webkit-slider-thumb {
+    appearance: none; /* Hides the slider so that custom slider can be made */
+    -webkit-appearance: none;
+    border: 1px solid #000000;
+    height: 36px;
+    width: 16px;
+    border-radius: 3px;
+    background: #ffffff;
+    cursor: default;
+    margin-top: -14px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; /* Add cool effects to your sliders! */
+}
+
+/* All the same stuff for Firefox */
+input[type=range]::-moz-range-thumb {
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    border: 1px solid #000000;
+    height: 36px;
+    width: 16px;
+    border-radius: 3px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8.4px;
+    cursor: default;
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    background: #3071a9;
+    border-radius: 1.3px;
+    border: 0.2px solid #010101;
+}
+
+input[type=range]:focus::-webkit-slider-runnable-track {
+    background: #367ebd;
+}
+
+input[type=range]::-moz-range-track {
+    width: 100%;
+    height: 8.4px;
+    cursor: pointer;
+    box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+    background: #3071a9;
+    border-radius: 1.3px;
+    border: 0.2px solid #010101;
+}

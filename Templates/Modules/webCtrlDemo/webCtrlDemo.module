@@ -1,0 +1,9 @@
+<ModuleDefinition
+	ModuleId="webCtrlDemo"
+	VersionId="1"
+	Description="GuiWebCtrl demo."
+	ScriptFile="webCtrlDemo.cs"
+	CreateFunction="create"
+	DestroyFunction="destroy"
+	Group="Game">
+</ModuleDefinition>
