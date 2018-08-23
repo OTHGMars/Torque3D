@@ -152,7 +152,7 @@ function webCtrlDemo::startupCEF( %this )
    WebEngine::initializeCEF();
 
    // Convert our local html path
-   WebDemoControl.StartURL = getMainDotCsDir() @ "/data/webCtrlDemo/html/demoTestGui.html";
+   WebDemoControl.StartURL = "file:///" @ getMainDotCsDir() @ "/data/webCtrlDemo/html/demoTestGui.html";
    
    %this.loadControllerMap();
 }

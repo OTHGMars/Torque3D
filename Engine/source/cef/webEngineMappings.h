@@ -838,9 +838,9 @@ void WebEngine::_buildKeyMaps()
    TorqueToVK[KEY_9] = XK_9;
    TorqueToVK[KEY_0] = XK_0;
 
-   TorqueToVK[KEY_CONTROL] = 0; //no mapping, see right/left version
-   TorqueToVK[KEY_ALT] = 0; //no mapping, see right/left version
-   TorqueToVK[KEY_SHIFT] = 0; //no mapping, see right/left version
+   //TorqueToVK[KEY_CONTROL] = 0; //no mapping, see right/left version
+   //TorqueToVK[KEY_ALT] = 0; //no mapping, see right/left version
+   //TorqueToVK[KEY_SHIFT] = 0; //no mapping, see right/left version
    TorqueToVK[KEY_LCONTROL] = XK_Control_L;
    TorqueToVK[KEY_RCONTROL] = XK_Control_R;
    TorqueToVK[KEY_LALT] = XK_Alt_L;

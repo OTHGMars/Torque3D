@@ -20,6 +20,10 @@
 # IN THE SOFTWARE.
 # -----------------------------------------------------------------------------
 
+if( NOT TORQUE_CEF_WEB )
+    return()
+endif()
+
 project(cef_process)
 
 # cef_process sources.
@@ -27,12 +31,12 @@ addFile(${libDir}/cefproc/cefsimple/simple_app.cc)
 addFile(${libDir}/cefproc/cefsimple/simple_app.h)
 
 if(WIN32)
-   addFile(${libDir}/cefproc/cefsimple/cefsimple.exe.manifest)
-   addFile(${libDir}/cefproc/cefsimple/cefsimple.rc)
-   addFile(${libDir}/cefproc/cefsimple/cefsimple_win.cc)
-   addFile(${libDir}/cefproc/cefsimple/resource.h)
-   addFile(${libDir}/cefproc/cefsimple/res/cefsimple.ico)
-   addFile(${libDir}/cefproc/cefsimple/res/small.ico)
+    addFile(${libDir}/cefproc/cefsimple/cefsimple.exe.manifest)
+    addFile(${libDir}/cefproc/cefsimple/cefsimple.rc)
+    addFile(${libDir}/cefproc/cefsimple/cefsimple_win.cc)
+    addFile(${libDir}/cefproc/cefsimple/resource.h)
+    addFile(${libDir}/cefproc/cefsimple/res/cefsimple.ico)
+    addFile(${libDir}/cefproc/cefsimple/res/small.ico)
 endif()
 
 if(UNIX AND NOT APPLE)
@@ -48,8 +52,13 @@ LIST(APPEND ${PROJECT_NAME}_paths "${libDir}/cefproc")
 addInclude( "${TORQUE_CEF_PATH}" )
 
 # Add the libs - these set from module_cef.cmake
-addLibRelease("${CEF_LIBS}")
-addLibDebug("${CEF_LIBS_DEBUG}")
+if(UNIX AND NOT APPLE)
+    addLib("${CEF_DLL_WRAPPER_LIBRARY}")
+    addLib("${projectOutDir}/libcef.so")
+else()
+    addLibRelease("${CEF_LIBS}")
+    addLibDebug("${CEF_LIBS_DEBUG}")
+endif()
 
 finishExecutable()
 
