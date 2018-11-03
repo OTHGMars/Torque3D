@@ -71,6 +71,11 @@ bool ExtendedMoveList::getNextExtMove( ExtendedMove &curMove )
       curMove.rotY[i] = ExtendedMoveManager::mRotAY[i];
       curMove.rotZ[i] = ExtendedMoveManager::mRotAZ[i];
       curMove.rotW[i] = ExtendedMoveManager::mRotAW[i];
+
+      // Binary Blob
+      curMove.binBlobSize[i] = ExtendedMoveManager::mBinBlobSize[i];
+      dMemcpy(curMove.binaryBlob[i], ExtendedMoveManager::mBinaryBlob[i], curMove.binBlobSize[i]);            
+      ExtendedMoveManager::mBinBlobSize[i] = 0;
    }
 
    if (mConnection->getControlObject())

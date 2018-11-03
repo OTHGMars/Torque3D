@@ -13,6 +13,13 @@ struct ExtendedMove : public Move
 
       MaxPositionBits = 16,
       MaxRotationBits = 15,
+
+      // From openvr.h "The required buffer size will never exceed ( sizeof(VR_BoneTransform_t)*boneCount + 2)"
+      // 994 == sizeof(vr::VRBoneTransform_t) * 31 + 2
+      // In testing the binary animation blob has not exceeded 61 bytes. There is an AssertWarn that
+      // will fire if the animation blob ever exceeds the value set here.
+      MaxBlobSizeBits = 8,
+      MaxBinBlobSize = 128,
    };
 
    bool DeviceIsActive[MaxPositionsRotations];
@@ -25,6 +32,10 @@ struct ExtendedMove : public Move
    F32 rotX[MaxPositionsRotations], rotY[MaxPositionsRotations], rotZ[MaxPositionsRotations], rotW[MaxPositionsRotations];
    S32 crot[MaxPositionsRotations][3];
    S32 cmaxQuatIndex[MaxPositionsRotations];
+
+   // Binary Blob Data
+   U32 binBlobSize[MaxPositionsRotations];
+   U8 binaryBlob[MaxPositionsRotations][MaxBinBlobSize];
 
    ExtendedMove();
 
@@ -50,6 +61,8 @@ public:
    static F32 mRotAY[ExtendedMove::MaxPositionsRotations];
    static F32 mRotAZ[ExtendedMove::MaxPositionsRotations];
    static F32 mRotAW[ExtendedMove::MaxPositionsRotations];
+   static U32 mBinBlobSize[ExtendedMove::MaxPositionsRotations];
+   static U8 mBinaryBlob[ExtendedMove::MaxPositionsRotations][ExtendedMove::MaxBinBlobSize];
 
    static F32 mPosScale;
 

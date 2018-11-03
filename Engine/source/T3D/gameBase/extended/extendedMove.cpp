@@ -24,6 +24,8 @@ F32 ExtendedMoveManager::mRotAX[ExtendedMove::MaxPositionsRotations] = { 0, };
 F32 ExtendedMoveManager::mRotAY[ExtendedMove::MaxPositionsRotations] = { 0, };
 F32 ExtendedMoveManager::mRotAZ[ExtendedMove::MaxPositionsRotations] = { 0, };
 F32 ExtendedMoveManager::mRotAW[ExtendedMove::MaxPositionsRotations] = { 1, 1, 1 };
+U32 ExtendedMoveManager::mBinBlobSize[ExtendedMove::MaxPositionsRotations] = { 0, };
+U8 ExtendedMoveManager::mBinaryBlob[ExtendedMove::MaxPositionsRotations][ExtendedMove::MaxBinBlobSize] = { 0, };
 
 F32 ExtendedMoveManager::mPosScale = 2.0f;
 
@@ -107,6 +109,8 @@ ExtendedMove::ExtendedMove() : Move()
       crot[i][1] = crot[i][0];
       crot[i][2] = crot[i][0];
       cmaxQuatIndex[i] = 3;
+
+      binBlobSize[i] = 0;
    }
 }
 
@@ -142,6 +146,13 @@ void ExtendedMove::pack(BitStream *stream, const Move * basemove)
             stream->writeInt(crot[i][0], MaxRotationBits);
             stream->writeInt(crot[i][1], MaxRotationBits);
             stream->writeInt(crot[i][2], MaxRotationBits);
+
+            // Binary Blob Data
+            if (stream->writeFlag(binBlobSize[i] > 0))
+            {
+               stream->writeInt(binBlobSize[i], MaxBlobSizeBits);
+               stream->writeBits(binBlobSize[i] * 8, binaryBlob[i]);
+            }
          }
       }
    }
@@ -184,6 +195,13 @@ void ExtendedMove::unpack(BitStream *stream, const Move * basemove)
             crot[i][1] = stream->readInt(MaxRotationBits);
             crot[i][2] = stream->readInt(MaxRotationBits);
             unclampQuat(i);
+
+            // Binary Blob
+            if (stream->readFlag())
+            {
+               binBlobSize[i] = stream->readInt(MaxBlobSizeBits);
+               stream->readBits(binBlobSize[i] * 8, binaryBlob[i]);
+            }
          }
          else
          {
@@ -196,6 +214,8 @@ void ExtendedMove::unpack(BitStream *stream, const Move * basemove)
             rotY[i] = extBaseMove->rotY[i];
             rotZ[i] = extBaseMove->rotZ[i];
             rotW[i] = extBaseMove->rotW[i];
+
+            binBlobSize[i] = 0;
          }
       }
    }
