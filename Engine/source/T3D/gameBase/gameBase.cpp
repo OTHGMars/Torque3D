@@ -119,10 +119,11 @@ IMPLEMENT_CALLBACK( GameBaseData, onUnmount, void, ( SceneObject* obj, SceneObje
    "@param node the mountObj node we are unmounted from\n\n"
    "@see onAdd for an example\n" );
 
-IMPLEMENT_CALLBACK( GameBase, setControl, void, ( bool controlled ), ( controlled ),
+IMPLEMENT_CALLBACK( GameBase, setControl, void, ( bool controlled, GameConnection *client ), ( controlled, client ),
    "@brief Called when the client controlling the object changes.\n\n"
    "@param controlled true if a client now controls this object, false if no "
-   "client controls this object.\n" );
+   "client controls this object.\n"
+   "@param client The Id of the client connection gaining or losing control of this object.\n" );
 
 
 GameBaseData::GameBaseData()
@@ -526,9 +527,9 @@ void GameBase::setControllingClient(GameConnection* client)
    if (isClientObject())
    {
       if (mControllingClient)
-         setControl_callback( 0 );
+         setControl_callback( 0, mControllingClient );
       if (client)
-         setControl_callback( 1 );
+         setControl_callback( 1, client );
    }
 
    mControllingClient = client;

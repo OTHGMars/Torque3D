@@ -443,7 +443,7 @@ public:
 
    /// @name Callbacks
    /// @{
-   DECLARE_CALLBACK( void, setControl, ( bool controlled ) );
+   DECLARE_CALLBACK( void, setControl, ( bool controlled, GameConnection *client ) );
    /// @}
 
 private:
