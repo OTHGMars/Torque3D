@@ -390,7 +390,6 @@ void GuiTSCtrl::_internalRender(RectI guiViewport, RectI renderViewport, Frustum
    GFX->clear(GFXClearZBuffer, ColorI(20, 20, 20), 1.0f, 0);
 
    GFX->setFrustum(frustum);
-   mSaveProjection = GFX->getProjectionMatrix();
 
    if (mLastCameraQuery.ortho)
    {
