@@ -51,7 +51,8 @@ FontRenderBatcher::FontRenderBatcher() : mStorage(8096)
       // so it may have to change.  -bramage
       f.samplers[0].textureColorOp = GFXTOPAdd;
 
-      f.setColorWrites(true, true, true, false); // NOTE: comment this out if alpha write is needed
+      //f.setColorWrites(true, true, true, false); // NOTE: comment this out if alpha write is needed
+      f.setSeparateAlphaBlend(true, GFXBlendOne, GFXBlendOne, GFXBlendOpMax);
       mFontSB = GFX->createStateBlock(f);
    }
 }
