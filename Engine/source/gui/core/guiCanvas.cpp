@@ -634,6 +634,13 @@ bool GuiCanvas::tabPrev(void)
 bool GuiCanvas::processInputEvent(InputEventInfo &inputEvent)
 {
    mConsumeLastInputEvent = true;
+
+   // If we have an active offscreen canvas, give it the input
+   if (GuiOffscreenCanvas::sActiveOffscreenCanvas && 
+      (GuiOffscreenCanvas::sActiveOffscreenCanvas != this) &&
+      GuiOffscreenCanvas::sActiveOffscreenCanvas->processInputEvent(inputEvent))
+      return mConsumeLastInputEvent;
+
    // First call the general input handler (on the extremely off-chance that it will be handled):
    if (mFirstResponder &&  mFirstResponder->onInputEvent(inputEvent))
    {
@@ -1829,9 +1836,7 @@ void GuiCanvas::renderFrame(bool preRenderOnly, bool bufferSwap /* = true */)
    // Render all offscreen canvas objects here since we may need them in the render loop
    if (GuiOffscreenCanvas::sList.size() != 0)
    {
-      // Reset the entire state since oculus shit will have barfed it.
-      //GFX->disableShaders(true);
-      GFX->updateStates(true);
+      GFX->updateStates(false);
 
       for (Vector<GuiOffscreenCanvas*>::iterator itr = GuiOffscreenCanvas::sList.begin(); itr != GuiOffscreenCanvas::sList.end(); itr++)
       {
