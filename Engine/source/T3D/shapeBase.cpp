@@ -2159,7 +2159,7 @@ void ShapeBase::getCameraTransform(F32* pos,MatrixF* mat)
    mat->mul( gCamFXMgr.getTrans() );
 }
 
-void ShapeBase::getEyeCameraTransform(IDisplayDevice *displayDevice, U32 eyeId, MatrixF *outMat)
+void ShapeBase::getEyeCameraTransform(IDisplayDevice *displayDevice, S32 eyeId, MatrixF *outMat)
 {
    MatrixF temp(1);
    Point3F eyePos;

@@ -380,7 +380,7 @@ void Camera::getCameraTransform(F32* pos, MatrixF* mat)
    mat->mul( gCamFXMgr.getTrans() );
 }
 
-void Camera::getEyeCameraTransform(IDisplayDevice *displayDevice, U32 eyeId, MatrixF *outMat)
+void Camera::getEyeCameraTransform(IDisplayDevice *displayDevice, S32 eyeId, MatrixF *outMat)
 {
    // The camera doesn't support a third person mode,
    // so we want to override the default ShapeBase behavior.

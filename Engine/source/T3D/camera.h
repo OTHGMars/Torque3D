@@ -241,7 +241,7 @@ class Camera: public ShapeBase
       virtual void processTick( const Move* move );
       virtual void interpolateTick( F32 delta);
       virtual void getCameraTransform( F32* pos,MatrixF* mat );
-      virtual void getEyeCameraTransform( IDisplayDevice *display, U32 eyeId, MatrixF *outMat );
+      virtual void getEyeCameraTransform( IDisplayDevice *display, S32 eyeId, MatrixF *outMat );
 
       virtual void writePacketData( GameConnection* conn, BitStream* stream );
       virtual void readPacketData( GameConnection* conn, BitStream* stream );
