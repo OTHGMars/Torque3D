@@ -508,14 +508,17 @@ void Camera::processTick(const Move* move)
          if(emoveIndex >= ExtendedMove::MaxPositionsRotations)
             emoveIndex = 0;
 
-         if(emove->EulerBasedRotation[emoveIndex])
+         if(emove->DeviceIsActive[emoveIndex])
          {
             if(virtualMode != StationaryMode &&
                virtualMode != TrackObjectMode &&
                (!mLocked || virtualMode != OrbitObjectMode && virtualMode != OrbitPointMode))
             {
-               // Pitch
-               mRot.x += (emove->rotX[emoveIndex] - mLastAbsolutePitch);
+               QuatF moveRot(emove->rotX[emoveIndex], emove->rotY[emoveIndex], emove->rotZ[emoveIndex], emove->rotW[emoveIndex]);
+               MatrixF trans(1);
+               moveRot.setMatrix(&trans);
+               trans.inverse();
+               mRot = trans.toEuler();
 
                // Do we also include the relative pitch value?
                if(con->getControlSchemeAddPitchToAbsRot() && !strafeMode)
@@ -533,9 +536,6 @@ void Camera::processTick(const Move* move)
                while (mRot.x > M_PI_F) 
                   mRot.x -= M_2PI_F;
 
-               // Yaw
-               mRot.z += (emove->rotZ[emoveIndex] - mLastAbsoluteYaw);
-
                // Do we also include the relative yaw value?
                if(con->getControlSchemeAddYawToAbsRot() && !strafeMode)
                {
@@ -551,13 +551,6 @@ void Camera::processTick(const Move* move)
                   mRot.z += M_2PI_F;
                while (mRot.z > M_PI_F) 
                   mRot.z -= M_2PI_F;
-
-               mLastAbsoluteYaw = emove->rotZ[emoveIndex];
-               mLastAbsolutePitch = emove->rotX[emoveIndex];
-               mLastAbsoluteRoll = emove->rotY[emoveIndex];
-
-               // Bank
-               mRot.y = emove->rotY[emoveIndex];
 
                // Constrain the range of mRot.y
                while (mRot.y > M_PI_F) 

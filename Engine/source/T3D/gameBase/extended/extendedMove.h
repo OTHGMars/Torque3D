@@ -12,20 +12,19 @@ struct ExtendedMove : public Move
       MaxPositionsRotations = 3,
 
       MaxPositionBits = 16,
-      MaxRotationBits = 16,
+      MaxRotationBits = 15,
    };
 
-   // Position is in millimeters
-   F32 posX[MaxPositionsRotations], posY[MaxPositionsRotations], posZ[MaxPositionsRotations];
+   bool DeviceIsActive[MaxPositionsRotations];
 
+   // Absolute position
+   F32 posX[MaxPositionsRotations], posY[MaxPositionsRotations], posZ[MaxPositionsRotations];
    S32 cposX[MaxPositionsRotations], cposY[MaxPositionsRotations], cposZ[MaxPositionsRotations];
 
-   bool EulerBasedRotation[MaxPositionsRotations];
-
+   // Absolute Rotation
    F32 rotX[MaxPositionsRotations], rotY[MaxPositionsRotations], rotZ[MaxPositionsRotations], rotW[MaxPositionsRotations];
-
-   // Network clamped rotation
-   S32 crotX[MaxPositionsRotations], crotY[MaxPositionsRotations], crotZ[MaxPositionsRotations], crotW[MaxPositionsRotations];
+   S32 crot[MaxPositionsRotations][3];
+   S32 cmaxQuatIndex[MaxPositionsRotations];
 
    ExtendedMove();
 
@@ -34,6 +33,8 @@ struct ExtendedMove : public Move
 
    virtual void clamp();
    virtual void unclamp();
+   virtual void clampQuat(U32 deviceIndex);
+   virtual void unclampQuat(U32 deviceIndex);
 };
 
 extern const ExtendedMove NullExtendedMove;
@@ -41,14 +42,14 @@ extern const ExtendedMove NullExtendedMove;
 class ExtendedMoveManager
 {
 public:
+   static bool mDeviceIsActive[ExtendedMove::MaxPositionsRotations];
    static F32 mPosX[ExtendedMove::MaxPositionsRotations];
    static F32 mPosY[ExtendedMove::MaxPositionsRotations];
    static F32 mPosZ[ExtendedMove::MaxPositionsRotations];
-   static bool mRotIsEuler[ExtendedMove::MaxPositionsRotations];
    static F32 mRotAX[ExtendedMove::MaxPositionsRotations];
    static F32 mRotAY[ExtendedMove::MaxPositionsRotations];
    static F32 mRotAZ[ExtendedMove::MaxPositionsRotations];
-   static F32 mRotAA[ExtendedMove::MaxPositionsRotations];
+   static F32 mRotAW[ExtendedMove::MaxPositionsRotations];
 
    static F32 mPosScale;
 

@@ -2043,20 +2043,31 @@ void Player::processTick(const Move* move)
    bool prevMoveMotion = mMoveMotion;
    Pose prevPose = getPose();
 
+#ifdef TORQUE_EXTENDED_MOVE
+   ExtendedMove aiMove;
+   ExtendedMove pMove,cMove;
+#else
+   Move aiMove;
+   Move pMove,cMove;
+#endif
+
    // If we're not being controlled by a client, let the
    // AI sub-module get a chance at producing a move.
-   Move aiMove;
    if (!move && isServerObject() && getAIMove(&aiMove))
       move = &aiMove;
 
    // Manage the control object and filter moves for the player
-   Move pMove,cMove;
    if (mControlObject) {
       if (!move)
          mControlObject->processTick(0);
       else {
+#ifdef TORQUE_EXTENDED_MOVE
+         pMove = NullExtendedMove;
+         cMove = *((ExtendedMove *) move);
+#else
          pMove = NullMove;
          cMove = *move;
+#endif
          //if (isMounted()) {
             // Filter Jump trigger if mounted
             //pMove.trigger[2] = move->trigger[2];
@@ -2218,6 +2229,55 @@ void Player::interpolateTick(F32 dt)
 
    Point3F pos = mDelta.pos + mDelta.posVec * dt;
    Point3F rot = mDelta.rot + mDelta.rotVec * dt;
+
+#ifdef TORQUE_EXTENDED_MOVE
+   // If it's the control object and rendering to an hmd, use the hmd rotation
+   GameConnection *conn = GameConnection::getConnectionToServer();
+   if (conn && conn->getControlObject() == this && conn->getControlSchemeAbsoluteRotation() && conn->hasDisplayDevice())
+   {  // Update rotations based on the current head vectors
+      MatrixF temp(1);
+      IDevicePose pose;
+      conn->getDisplayDevice()->getFrameEyePose(&pose,-1);
+      pose.orientation.setMatrix(&temp);
+      Point3F vecForward(temp.getForwardVector() * 10.0f);
+      Point3F viewVector(vecForward);
+      vecForward.z = 0; // flatten
+      vecForward.normalizeSafe();
+
+      F32 yawAng;
+      F32 pitchAng;
+      MathUtils::getAnglesFromVector(vecForward, yawAng, pitchAng);
+
+      if (yawAng < 0.0f)
+         yawAng += M_2PI_F;
+      if (yawAng > M_2PI_F)
+         yawAng -= M_2PI_F;
+
+      rot.z = yawAng;
+
+      // Get pitch angle from the hmd
+      Point2F viewHorizontal(viewVector.x, viewVector.y);
+      if (viewHorizontal.isZero())
+      {  // HMD is either pointing straight up or straight down
+         if (viewVector.z > 0)
+            mDelta.head.x = mDataBlock->minLookAngle; // Up
+         else
+            mDelta.head.x = mDataBlock->maxLookAngle; // Down
+      }
+      else
+      {
+         vecForward.set(0.0f, viewHorizontal.len(), viewVector.z);
+         vecForward.normalizeSafe();
+         MathUtils::getAnglesFromVector(vecForward, yawAng, pitchAng);
+         F32 p = -pitchAng; // pitchAng and mHead.x have opposite signs
+         if (p > M_PI_F)
+            p -= M_2PI_F;
+         if (p < -M_PI_F)
+            p += M_2PI_F;
+         mDelta.head.x = mClampF(p, mDataBlock->minLookAngle, mDataBlock->maxLookAngle);
+      }
+   }
+#endif
 
    if (!ignore_updates)
       setRenderPosition(pos,rot,dt);
@@ -2628,113 +2688,55 @@ void Player::updateMove(const Move* move)
          if(emoveIndex >= ExtendedMove::MaxPositionsRotations)
             emoveIndex = 0;
 
-         if(emove->EulerBasedRotation[emoveIndex])
-         {
-            // Head pitch
-            mHead.x += (emove->rotX[emoveIndex] - mLastAbsolutePitch);
+         // Orient the player so we are looking towards the required position, ignoring any banking
+         QuatF moveRot(emove->rotX[emoveIndex], emove->rotY[emoveIndex], emove->rotZ[emoveIndex], emove->rotW[emoveIndex]);
+         MatrixF trans(1);
+         moveRot.setMatrix(&trans);
+         trans.inverse();
 
-            // Do we also include the relative yaw value?
-            if(con->getControlSchemeAddPitchToAbsRot())
-            {
-               F32 x = move->pitch;
-               if (x > M_PI_F)
-                  x -= M_2PI_F;
+         Point3F vecForward(trans.getForwardVector() * 10.0f);
+         Point3F viewVector(vecForward);
+         Point3F orient;
+         EulerF rot;
+         vecForward.z = 0; // flatten
+         vecForward.normalizeSafe();
 
-               mHead.x += x;
-            }
+         F32 yawAng;
+         F32 pitchAng;
+         MathUtils::getAnglesFromVector(vecForward, yawAng, pitchAng);
 
-            // Constrain the range of mHead.x
-            while (mHead.x < -M_PI_F) 
-               mHead.x += M_2PI_F;
-            while (mHead.x > M_PI_F) 
-               mHead.x -= M_2PI_F;
+         mRot = EulerF(0);
+         mRot.z = yawAng;
+         mHead = EulerF(0);
 
-            // Rotate (heading) head or body?
-            if (move->freeLook && ((isMounted() && getMountNode() == 0) || (con && !con->isFirstPerson())))
-            {
-               // Rotate head
-               mHead.z += (emove->rotZ[emoveIndex] - mLastAbsoluteYaw);
+         while (mRot.z < 0.0f)
+            mRot.z += M_2PI_F;
+         while (mRot.z > M_2PI_F)
+            mRot.z -= M_2PI_F;
 
-               // Do we also include the relative yaw value?
-               if(con->getControlSchemeAddYawToAbsRot())
-               {
-                  F32 z = move->yaw;
-                  if (z > M_PI_F)
-                     z -= M_2PI_F;
-
-                  mHead.z += z;
-               }
-
-               // Constrain the range of mHead.z
-               while (mHead.z < 0.0f)
-                  mHead.z += M_2PI_F;
-               while (mHead.z > M_2PI_F)
-                  mHead.z -= M_2PI_F;
-            }
+         // Get pitch angle from the hmd
+         Point2F viewHorizontal(viewVector.x, viewVector.y);
+         if (viewHorizontal.isZero())
+         {  // HMD is either pointing straight up or straight down
+            if (viewVector.z > 0)
+               mHead.x = mDataBlock->minLookAngle; // Up
             else
-            {
-               // Rotate body
-               mRot.z += (emove->rotZ[emoveIndex] - mLastAbsoluteYaw);
-
-               // Do we also include the relative yaw value?
-               if(con->getControlSchemeAddYawToAbsRot())
-               {
-                  F32 z = move->yaw;
-                  if (z > M_PI_F)
-                     z -= M_2PI_F;
-
-                  mRot.z += z;
-               }
-
-               // Constrain the range of mRot.z
-               while (mRot.z < 0.0f)
-                  mRot.z += M_2PI_F;
-               while (mRot.z > M_2PI_F)
-                  mRot.z -= M_2PI_F;
-            }
-            mLastAbsoluteYaw = emove->rotZ[emoveIndex];
-            mLastAbsolutePitch = emove->rotX[emoveIndex];
-            mLastAbsoluteRoll = emove->rotY[emoveIndex];
-
-            // Head bank
-            mHead.y = emove->rotY[emoveIndex];
-
-            // Constrain the range of mHead.y
-            while (mHead.y > M_PI_F) 
-               mHead.y -= M_2PI_F;
+               mHead.x = mDataBlock->maxLookAngle; // Down
          }
          else
          {
-            // Orient the player so we are looking towards the required position, ignoring any banking
-            AngAxisF moveRot(Point3F(emove->rotX[emoveIndex], emove->rotY[emoveIndex], emove->rotZ[emoveIndex]), emove->rotW[emoveIndex]);
-            MatrixF trans(1);
-            moveRot.setMatrix(&trans);
-            trans.inverse();
-
-            Point3F vecForward(0, 10, 0);
-            Point3F viewAngle;
-            Point3F orient;
-            EulerF rot;
-            trans.mulV(vecForward);
-            viewAngle = vecForward;
-            vecForward.z = 0; // flatten
+            vecForward.set(0.0f, viewHorizontal.len(), viewVector.z);
             vecForward.normalizeSafe();
-
-            F32 yawAng;
-            F32 pitchAng;
             MathUtils::getAnglesFromVector(vecForward, yawAng, pitchAng);
-
-            mRot = EulerF(0);
-            mRot.z = yawAng;
-            mHead = EulerF(0);
-
-            while (mRot.z < 0.0f)
-               mRot.z += M_2PI_F;
-            while (mRot.z > M_2PI_F)
-               mRot.z -= M_2PI_F;
-
-            absoluteDelta = true;
+            F32 p = -pitchAng; // pitchAng and mHead.x have opposite signs
+            if (p > M_PI_F)
+               p -= M_2PI_F;
+            if (p < -M_PI_F)
+               p += M_2PI_F;
+            mHead.x = mClampF(p, mDataBlock->minLookAngle, mDataBlock->maxLookAngle);
          }
+
+         absoluteDelta = true;
       }
 #endif
 
