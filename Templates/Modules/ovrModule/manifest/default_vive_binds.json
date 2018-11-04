@@ -1,0 +1,332 @@
+{
+   "alias_info" : {},
+   "app_key" : "system.generated.cleanovr.exe",
+   "bindings" : {
+      "/actions/demo" : {
+         "chords" : [
+            {
+               "inputs" : [
+                  [ "/user/hand/left/input/grip", "click" ],
+                  [ "/user/hand/left/input/application_menu", "click" ]
+               ],
+               "output" : "/actions/demo/in/toggle_left"
+            },
+            {
+               "inputs" : [
+                  [ "/user/hand/right/input/grip", "click" ],
+                  [ "/user/hand/right/input/application_menu", "click" ]
+               ],
+               "output" : "/actions/demo/in/toggle_right"
+            }
+         ],
+         "poses" : [
+            {
+               "output" : "/actions/demo/in/hand_left",
+               "path" : "/user/hand/left/pose/raw"
+            },
+            {
+               "output" : "/actions/demo/in/hand_right",
+               "path" : "/user/hand/right/pose/raw"
+            }
+         ],
+         "skeleton" : [
+            {
+               "output" : "/actions/demo/in/rh_anim",
+               "path" : "/user/hand/right/input/skeleton/right"
+            },
+            {
+               "output" : "/actions/demo/in/lh_anim",
+               "path" : "/user/hand/left/input/skeleton/left"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/laser_left"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/laser_right"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/demo_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/application_menu"
+            }
+         ]
+      },
+      "/actions/menu" : {
+         "sources" : [
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_submit"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_cancel"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/application_menu"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_lmb"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/menu/in/menu_mouse"
+                  }
+               },
+               "mode" : "trackpad",
+               "path" : "/user/hand/right/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/application_menu"
+            },
+            {
+               "inputs" : {
+                  "east" : {
+                     "output" : "/actions/menu/in/menu_next"
+                  },
+                  "north" : {
+                     "output" : "/actions/menu/in/menu_farther"
+                  },
+                  "south" : {
+                     "output" : "/actions/menu/in/menu_closer"
+                  },
+                  "west" : {
+                     "output" : "/actions/menu/in/menu_last"
+                  }
+               },
+               "mode" : "dpad",
+               "parameters" : {
+                  "sub_mode" : "click"
+               },
+               "path" : "/user/hand/left/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_rmb"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/trigger"
+            }
+         ]
+      },
+      "/actions/player" : {
+         "chords" : [
+            {
+               "inputs" : [
+                  [ "/user/hand/left/input/grip", "click" ],
+                  [ "/user/hand/left/input/application_menu", "click" ]
+               ],
+               "output" : "/actions/player/in/player_interact"
+            }
+         ],
+         "haptics" : [
+            {
+               "output" : "/actions/player/out/player_recoil",
+               "path" : "/user/hand/right/output/haptic"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_move_press"
+                  },
+                  "position" : {
+                     "output" : "/actions/player/in/player_move_touch"
+                  }
+               },
+               "mode" : "trackpad",
+               "path" : "/user/hand/left/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_rot_press"
+                  },
+                  "position" : {
+                     "output" : "/actions/player/in/player_rot_touch"
+                  }
+               },
+               "mode" : "trackpad",
+               "path" : "/user/hand/right/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_fire"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_crouch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/application_menu"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_sprint"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_jump"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_weapup"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/application_menu"
+            }
+         ]
+      },
+      "/actions/vehicle" : {
+         "haptics" : [
+            {
+               "output" : "/actions/vehicle/out/vehicle_collision",
+               "path" : "/user/hand/right/output/haptic"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "pull" : {
+                     "output" : "/actions/vehicle/in/vehicle_throttle"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {},
+               "mode" : "none",
+               "path" : "/user/hand/right/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "pull" : {
+                     "output" : "/actions/vehicle/in/vehicle_reverse"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/vehicle/in/vehicle_steer"
+                  }
+               },
+               "mode" : "trackpad",
+               "path" : "/user/hand/left/input/trackpad"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_brake"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_fire"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_getout"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/application_menu"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/application_menu"
+            }
+         ]
+      }
+   },
+   "controller_type" : "vive_controller",
+   "description" : "Example bindings for Torque3D",
+   "name" : "Default T3D configuration for Vive Controller",
+   "options" : {},
+   "simulated_actions" : []
+}

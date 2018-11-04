@@ -1,0 +1,368 @@
+{
+   "alias_info" : {},
+   "app_key" : "system.generated.ovr_av.exe",
+   "bindings" : {
+      "/actions/demo" : {
+         "chords" : [
+            {
+               "inputs" : [
+                  [ "/user/hand/left/input/b", "click" ],
+                  [ "/user/hand/left/input/trigger", "touch" ]
+               ],
+               "output" : "/actions/demo/in/toggle_left"
+            },
+            {
+               "inputs" : [
+                  [ "/user/hand/right/input/b", "click" ],
+                  [ "/user/hand/right/input/trigger", "touch" ]
+               ],
+               "output" : "/actions/demo/in/toggle_right"
+            }
+         ],
+         "poses" : [
+            {
+               "output" : "/actions/demo/in/hand_left",
+               "path" : "/user/hand/left/pose/raw"
+            },
+            {
+               "output" : "/actions/demo/in/hand_right",
+               "path" : "/user/hand/right/pose/raw"
+            }
+         ],
+         "skeleton" : [
+            {
+               "output" : "/actions/demo/in/lh_anim",
+               "path" : "/user/hand/left/input/skeleton/left"
+            },
+            {
+               "output" : "/actions/demo/in/rh_anim",
+               "path" : "/user/hand/right/input/skeleton/right"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/analog_r_press"
+                  },
+                  "position" : {
+                     "output" : "/actions/demo/in/analog_right"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/right/input/thumbstick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/analog_l_press"
+                  },
+                  "position" : {
+                     "output" : "/actions/demo/in/analog_left"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/left/input/thumbstick"
+            },
+            {
+               "inputs" : {},
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "pull" : {
+                     "output" : "/actions/demo/in/trigger_right"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/demo_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/laser_right"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/grip_left"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/laser_left"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/b"
+            }
+         ]
+      },
+      "/actions/menu" : {
+         "sources" : [
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/menu/in/menu_mouse"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/right/input/thumbstick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_lmb"
+                  }
+               },
+               "mode" : "button",
+               "parameters" : {
+                  "force_input" : "value",
+                  "touch_activate_threshold" : "0.45",
+                  "touch_deactivate_threshold" : "0.4"
+               },
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_cancel"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_rmb"
+                  }
+               },
+               "mode" : "button",
+               "parameters" : {
+                  "touch_activate_threshold" : "0.45",
+                  "touch_deactivate_threshold" : "0.4"
+               },
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "east" : {
+                     "output" : "/actions/menu/in/menu_next"
+                  },
+                  "north" : {
+                     "output" : "/actions/menu/in/menu_farther"
+                  },
+                  "south" : {
+                     "output" : "/actions/menu/in/menu_closer"
+                  },
+                  "west" : {
+                     "output" : "/actions/menu/in/menu_last"
+                  }
+               },
+               "mode" : "dpad",
+               "parameters" : {
+                  "sub_mode" : "click"
+               },
+               "path" : "/user/hand/left/input/thumbstick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_back"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/a"
+            }
+         ]
+      },
+      "/actions/player" : {
+         "haptics" : [
+            {
+               "output" : "/actions/player/out/player_recoil",
+               "path" : "/user/hand/right/output/haptic"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_weapdown"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_jump"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/b"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_altfire"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/player/in/player_move_joy"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/left/input/thumbstick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_fire"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/player/in/player_rot_joy"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/right/input/thumbstick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_crouch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            }
+         ]
+      },
+      "/actions/vehicle" : {
+         "haptics" : [
+            {
+               "output" : "/actions/vehicle/out/vehicle_collision",
+               "path" : "/user/hand/left/output/haptic"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "pull" : {
+                     "output" : "/actions/vehicle/in/vehicle_reverse"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "pull" : {
+                     "output" : "/actions/vehicle/in/vehicle_throttle"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/vehicle/in/vehicle_steer"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/left/input/thumbstick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_getout"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_flipcar"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/b"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_fire"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            }
+         ]
+      }
+   },
+   "controller_type" : "knuckles",
+   "description" : "Example Knuckles bindings for Torque3D",
+   "name" : "Default T3D configuration for Knuckles Controller",
+   "options" : {},
+   "simulated_actions" : []
+}

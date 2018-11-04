@@ -1,0 +1,377 @@
+{
+   "action_sets" : [
+      {
+         "name" : "/actions/demo",
+         "usage" : "leftright"
+      },
+      {
+         "name" : "/actions/menu",
+         "usage" : "leftright"
+      },
+      {
+         "name" : "/actions/player",
+         "usage" : "leftright"
+      },
+      {
+         "name" : "/actions/vehicle",
+         "usage" : "leftright"
+      }
+   ],
+   "actions" : [
+      {
+         "name" : "/actions/demo/in/hand_left",
+         "type" : "pose"
+      },
+      {
+         "name" : "/actions/demo/in/hand_right",
+         "type" : "pose"
+      },
+      {
+         "name" : "/actions/demo/in/lh_anim",
+         "skeleton" : "/skeleton/hand/left",
+         "type" : "skeleton"
+      },
+      {
+         "name" : "/actions/demo/in/rh_anim",
+         "skeleton" : "/skeleton/hand/right",
+         "type" : "skeleton"
+      },
+      {
+         "name" : "/actions/demo/in/toggle_left",
+         "requirement" : "suggested",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/demo/in/toggle_right",
+         "requirement" : "suggested",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/demo/in/laser_left",
+         "requirement" : "suggested",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/demo/in/laser_right",
+         "requirement" : "suggested",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/demo/in/demo_menu",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_mouse",
+         "requirement" : "suggested",
+         "type" : "vector2"
+      },
+      {
+         "name" : "/actions/menu/in/menu_lmb",
+         "requirement" : "suggested",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_rmb",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_up",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_down",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_left",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_right",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_next",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_last",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_back",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_select",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_submit",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_cancel",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_menu",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_closer",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/menu/in/menu_farther",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_move_joy",
+         "requirement" : "optional",
+         "type" : "vector2"
+      },
+      {
+         "name" : "/actions/player/in/player_move_touch",
+         "requirement" : "optional",
+         "type" : "vector2"
+      },
+      {
+         "name" : "/actions/player/in/player_move_press",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_rot_joy",
+         "requirement" : "optional",
+         "type" : "vector2"
+      },
+      {
+         "name" : "/actions/player/in/player_rot_touch",
+         "requirement" : "optional",
+         "type" : "vector2"
+      },
+      {
+         "name" : "/actions/player/in/player_rot_press",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_fire",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_altfire",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_jump",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_crouch",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_sprint",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_weapup",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_weapdown",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_weapreload",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_tossammo",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_tossweapon",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_carjack",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_interact",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/in/player_menu",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/player/out/player_recoil",
+         "type" : "vibration"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_steer",
+         "requirement" : "suggested",
+         "type" : "vector2"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_throttle",
+         "requirement" : "suggested",
+         "type" : "vector1"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_reverse",
+         "requirement" : "suggested",
+         "type" : "vector1"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_fire",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_altfire",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_brake",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_brakelight",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_getout",
+         "requirement" : "suggested",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_flipcar",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/vehicle/in/vehicle_menu",
+         "requirement" : "optional",
+         "type" : "boolean"
+      },
+      {
+         "name" : "/actions/vehicle/out/vehicle_collision",
+         "type" : "vibration"
+      }
+   ],
+   "default_bindings" : [
+      {
+         "binding_url" : "default_vive_binds.json",
+         "controller_type" : "vive_controller"
+      },
+      {
+         "binding_url" : "default_knuckles_binds.json",
+         "controller_type" : "knuckles"
+      },
+      {
+         "binding_url" : "default_touch_binds.json",
+         "controller_type" : "oculus_touch"
+      }
+   ],
+   "localization" : [
+      {
+         "/actions/demo" : "Demo Controls",
+         "/actions/demo/in/demo_menu" : "Show Overlay",
+         "/actions/demo/in/hand_left" : "Left Hand",
+         "/actions/demo/in/hand_right" : "Right Hand",
+         "/actions/demo/in/laser_left" : "Left Laser",
+         "/actions/demo/in/laser_right" : "Right Laser",
+         "/actions/demo/in/lh_anim" : "Left Anim",
+         "/actions/demo/in/rh_anim" : "Right Anim",
+         "/actions/demo/in/toggle_left" : "Toggle Left Controller",
+         "/actions/demo/in/toggle_right" : "Toggle Right Controller",
+         "/actions/menu" : "Menu Controls",
+         "/actions/menu/in/menu_back" : "Back",
+         "/actions/menu/in/menu_cancel" : "Cancel",
+         "/actions/menu/in/menu_closer" : "Overlay Closer",
+         "/actions/menu/in/menu_down" : "Down",
+         "/actions/menu/in/menu_farther" : "Overlay Farther",
+         "/actions/menu/in/menu_last" : "Last Field",
+         "/actions/menu/in/menu_left" : "Left",
+         "/actions/menu/in/menu_lmb" : "Left Mouse Button",
+         "/actions/menu/in/menu_menu" : "Bindings Panel",
+         "/actions/menu/in/menu_mouse" : "Mouse",
+         "/actions/menu/in/menu_next" : "Next Field",
+         "/actions/menu/in/menu_right" : "Right",
+         "/actions/menu/in/menu_rmb" : "Right Mouse Button",
+         "/actions/menu/in/menu_select" : "Select",
+         "/actions/menu/in/menu_submit" : "Submit",
+         "/actions/menu/in/menu_up" : "Up",
+         "/actions/player" : "Player Controls",
+         "/actions/player/in/player_altfire" : "Fire Alternate",
+         "/actions/player/in/player_carjack" : "Car Jack",
+         "/actions/player/in/player_crouch" : "Crouch",
+         "/actions/player/in/player_fire" : "Fire Weapon",
+         "/actions/player/in/player_interact" : "Interact",
+         "/actions/player/in/player_jump" : "Jump",
+         "/actions/player/in/player_menu" : "Pause Menu",
+         "/actions/player/in/player_move_joy" : "Joystick Movement",
+         "/actions/player/in/player_move_press" : "Press Movement",
+         "/actions/player/in/player_move_touch" : "Touch Movement",
+         "/actions/player/in/player_rot_joy" : "Joystick Rotation",
+         "/actions/player/in/player_rot_press" : "Press Rotation",
+         "/actions/player/in/player_rot_touch" : "Touch Rotation",
+         "/actions/player/in/player_sprint" : "Sprint",
+         "/actions/player/in/player_tossammo" : "Drop Ammo",
+         "/actions/player/in/player_tossweapon" : "Drop Weapon",
+         "/actions/player/in/player_weapdown" : "Cycle Weapon Next",
+         "/actions/player/in/player_weapreload" : "Reload",
+         "/actions/player/in/player_weapup" : "Cycle Weapon Last",
+         "/actions/player/out/player_recoil" : "Recoil",
+         "/actions/vehicle" : "Vehicle Controls",
+         "/actions/vehicle/in/vehicle_altfire" : "Fire Alternate",
+         "/actions/vehicle/in/vehicle_brake" : "Brakes",
+         "/actions/vehicle/in/vehicle_brakelight" : "Brake Lights",
+         "/actions/vehicle/in/vehicle_fire" : "Fire Weapon",
+         "/actions/vehicle/in/vehicle_flipcar" : "Flip Car",
+         "/actions/vehicle/in/vehicle_getout" : "Get Out",
+         "/actions/vehicle/in/vehicle_menu" : "Pause Menu",
+         "/actions/vehicle/in/vehicle_reverse" : "Reverse Throttle",
+         "/actions/vehicle/in/vehicle_steer" : "Steering",
+         "/actions/vehicle/in/vehicle_throttle" : "Throttle",
+         "/actions/vehicle/out/vehicle_collision" : "Collision",
+         "language_tag" : "en_US"
+      }
+   ]
+}

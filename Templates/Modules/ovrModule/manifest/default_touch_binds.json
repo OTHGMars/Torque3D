@@ -1,0 +1,352 @@
+{
+   "alias_info" : {},
+   "bindings" : {
+      "/actions/demo" : {
+         "chords" : [
+            {
+               "inputs" : [
+                  [ "/user/hand/left/input/grip", "click" ],
+                  [ "/user/hand/left/input/y", "click" ]
+               ],
+               "output" : "/actions/demo/in/toggle_left"
+            },
+            {
+               "inputs" : [
+                  [ "/user/hand/right/input/grip", "click" ],
+                  [ "/user/hand/right/input/b", "click" ]
+               ],
+               "output" : "/actions/demo/in/toggle_right"
+            }
+         ],
+         "poses" : [
+            {
+               "output" : "/actions/demo/in/hand_left",
+               "path" : "/user/hand/left/pose/raw"
+            },
+            {
+               "output" : "/actions/demo/in/hand_right",
+               "path" : "/user/hand/right/pose/raw"
+            }
+         ],
+         "skeleton" : [
+            {
+               "output" : "/actions/demo/in/lh_anim",
+               "path" : "/user/hand/left/input/skeleton/left"
+            },
+            {
+               "output" : "/actions/demo/in/rh_anim",
+               "path" : "/user/hand/right/input/skeleton/right"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/laser_right"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/laser_left"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/demo/in/demo_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            },
+            {
+               "inputs" : {},
+               "mode" : "button",
+               "path" : "/user/hand/left/input/y"
+            }
+         ]
+      },
+      "/actions/menu" : {
+         "sources" : [
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/menu/in/menu_mouse"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/right/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_cancel"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            },
+            {
+               "inputs" : {
+                  "east" : {
+                     "output" : "/actions/menu/in/menu_next"
+                  },
+                  "north" : {
+                     "output" : "/actions/menu/in/menu_farther"
+                  },
+                  "south" : {
+                     "output" : "/actions/menu/in/menu_closer"
+                  },
+                  "west" : {
+                     "output" : "/actions/menu/in/menu_last"
+                  }
+               },
+               "mode" : "dpad",
+               "parameters" : {
+                  "sub_mode" : "touch"
+               },
+               "path" : "/user/hand/left/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_lmb"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_rmb"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_submit"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/y"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_back"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/x"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/menu/in/menu_submit"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/a"
+            }
+         ]
+      },
+      "/actions/player" : {
+         "haptics" : [
+            {
+               "output" : "/actions/player/out/player_recoil",
+               "path" : "/user/hand/right/output/haptic"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/player/in/player_move_joy"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/left/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/player/in/player_rot_joy"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/right/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_fire"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_sprint"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_crouch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_jump"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_interact"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/x"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_weapdown"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/y"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/player/in/player_carjack"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/a"
+            }
+         ]
+      },
+      "/actions/vehicle" : {
+         "haptics" : [
+            {
+               "output" : "/actions/vehicle/out/vehicle_collision",
+               "path" : "/user/hand/right/output/haptic"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/vehicle/in/vehicle_steer"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/left/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "pull" : {
+                     "output" : "/actions/vehicle/in/vehicle_reverse"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "pull" : {
+                     "output" : "/actions/vehicle/in/vehicle_throttle"
+                  }
+               },
+               "mode" : "trigger",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_fire"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_brake"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_menu"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_getout"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/y"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/vehicle/in/vehicle_flipcar"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/x"
+            }
+         ]
+      }
+   },
+   "controller_type" : "oculus_touch",
+   "description" : "Example bindings for Torque3D",
+   "name" : "Default T3D configuration for Oculus Touch Controller",
+   "options" : {},
+   "simulated_actions" : []
+}
