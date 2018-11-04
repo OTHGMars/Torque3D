@@ -1139,10 +1139,10 @@ void Vehicle::updateMove(const Move* move)
    // Steering
    if (move != &NullMove) {
       F32 y = move->yaw;
-      mSteering.x = mClampF(mSteering.x + y,-mDataBlock->maxSteeringAngle,
+      mSteering.x = mClampF(y,-mDataBlock->maxSteeringAngle,
                             mDataBlock->maxSteeringAngle);
       F32 p = move->pitch;
-      mSteering.y = mClampF(mSteering.y + p,-mDataBlock->maxSteeringAngle,
+      mSteering.y = mClampF(p,-mDataBlock->maxSteeringAngle,
                             mDataBlock->maxSteeringAngle);
    }
    else {

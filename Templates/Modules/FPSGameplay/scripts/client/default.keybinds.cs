@@ -205,8 +205,8 @@ vehicleMap.bind( keyboard, w, moveforward );
 vehicleMap.bind( keyboard, s, movebackward );
 vehicleMap.bind( keyboard, up, moveforward );
 vehicleMap.bind( keyboard, down, movebackward );
-vehicleMap.bind( mouse, xaxis, yaw );
-vehicleMap.bind( mouse, yaxis, pitch );
+vehicleMap.bind( mouse, xaxis, mouseVehicleYaw );
+vehicleMap.bind( mouse, yaxis, mouseVehiclePitch );
 vehicleMap.bind( mouse, button0, mouseFire );
 vehicleMap.bind( mouse, button1, altTrigger );
 vehicleMap.bindCmd(keyboard, "f","getout();","");
@@ -215,7 +215,7 @@ vehicleMap.bindCmd(keyboard, "l", "brakeLights();", "");
 vehicleMap.bind( keyboard, v, toggleFreeLook ); // v for vanity
 //vehicleMap.bind(keyboard, tab, toggleFirstPerson );
 // bind the left thumbstick for steering
-vehicleMap.bind( gamepad, thumblx, "D", "-0.23 0.23", gamepadYaw );
+vehicleMap.bind( gamepad, thumblx, "D", "-0.23 0.23", analogYaw );
 // bind the gas, break, and reverse buttons
 vehicleMap.bind( gamepad, btn_a, moveforward );
 vehicleMap.bind( gamepad, btn_b, brake );

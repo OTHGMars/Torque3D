@@ -531,3 +531,89 @@ function brake(%val)
    commandToServer('toggleBrakeLights');
    $mvTriggerCount2++;
 }
+
+function mouseVehicleYaw(%val)
+{
+   %yawAdj = getMouseAdjustAmount(%val);
+   if (%yawAdj < 0)
+   {
+      %yawAdj = mAbs(%yawAdj);
+      $mvYawLeftSpeed -= %yawAdj;
+      if ($mvYawLeftSpeed < 0)
+      {
+         $mvYawRightSpeed += mAbs($mvYawLeftSpeed);
+         $mvYawLeftSpeed = 0;
+      }
+      else
+         $mvYawRightSpeed = 0;
+   }
+   else
+   {
+      $mvYawRightSpeed -= %yawAdj;
+      if ($mvYawRightSpeed < 0)
+      {
+         $mvYawLeftSpeed += mAbs($mvYawRightSpeed);
+         $mvYawRightSpeed = 0;
+      }
+      else
+         $mvYawLeftSpeed = 0;
+   }
+
+   // Clamp the input to the max turn angle for the vehicle to duplicate
+   // legacy behavior. CheetahCar.maxSteeringAngle == 0.585;
+   if ($mvYawLeftSpeed > 0.585)
+      $mvYawLeftSpeed = 0.585;
+   if ($mvYawRightSpeed > 0.585)
+      $mvYawRightSpeed = 0.585;
+}
+
+function mouseVehiclePitch(%val)
+{
+   %pitchAdj = getMouseAdjustAmount(%val);
+   if (%yawAdj < 0)
+   {
+      %yawAdj = mAbs(%yawAdj);
+      $mvPitchUpSpeed -= %yawAdj;
+      if ($mvPitchUpSpeed < 0)
+      {
+         $mvPitchDownSpeed += mAbs($mvPitchUpSpeed);
+         $mvPitchUpSpeed = 0;
+      }
+      else
+         $mvPitchDownSpeed = 0;
+   }
+   else
+   {
+      $mvPitchDownSpeed -= %yawAdj;
+      if ($mvPitchDownSpeed < 0)
+      {
+         $mvPitchUpSpeed += mAbs($mvPitchDownSpeed);
+         $mvPitchDownSpeed = 0;
+      }
+      else
+         $mvPitchUpSpeed = 0;
+   }
+
+   // Pitch is also clamped to the max turn angle in vehicle.cpp, not really
+   // sure why...but, legacy behavior.  CheetahCar.maxSteeringAngle == 0.585;
+   if ($mvPitchUpSpeed > 0.585)
+      $mvPitchUpSpeed = 0.585;
+   if ($mvPitchDownSpeed > 0.585)
+      $mvPitchDownSpeed = 0.585;
+}
+
+function analogYaw(%val)
+{
+   // Analog steering. Map the [-1, 1] input to the steering range for the
+   // Cheetah [-0.585, 0.585]
+   $mvYaw = %val * 0.585;
+   $mvYawLeftSpeed = 0;
+   $mvYawRightSpeed = 0;
+}
+
+function analogPitch(%val)
+{
+   $mvPitch = %val * mPi();
+   $mvPitchUpSpeed = 0;
+   $mvPitchDownSpeed = 0;
+}
