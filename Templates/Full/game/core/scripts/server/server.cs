@@ -60,7 +60,7 @@ function createAndConnectToLocalServer( %serverType, %level )
    %conn = new GameConnection( ServerConnection );
    RootGroup.add( ServerConnection );
 
-   %conn.setConnectArgs( $pref::Player::Name );
+   %conn.setConnectArgs( $pref::Player::Name, (OpenVR::isHmdPresent() && $Video::VREnabled) );
    %conn.setJoinPassword( $Client::Password );
    
    %result = %conn.connectLocal();
@@ -100,7 +100,8 @@ function createServer(%serverType, %level)
    $Server::ServerType = %serverType;
    $Server::LoadFailMsg = "";
    $Physics::isSinglePlayer = true;
-   
+   $IsTrackedDemo = (fileBase(%level) $= "Empty Room");
+
    // Setup for multi-player, the network must have been
    // initialized before now.
    if (%serverType $= "MultiPlayer")

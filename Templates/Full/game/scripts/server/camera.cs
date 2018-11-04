@@ -42,6 +42,16 @@ function Observer::onTrigger(%this,%obj,%trigger,%state)
          if (isObject(%obj.orbitObj))
          {
             cancelAll(%obj.orbitObj);
+            %obj.orbitObj.setVRControllers("", "", "");
+            for (%i = 0; %i < 3; %i++)
+            {
+               if (isObject(%obj.orbitObj.trackedObj[%i]))
+               {
+                  %obj.orbitObj.trackedObj[%i].schedule(0, "startFade", 1000, 0, true);
+                  %obj.orbitObj.trackedObj[%i].schedule(1000, "delete");
+               }
+            }
+
             %obj.orbitObj.schedule(0, "startFade", 1000, 0, true);
             %obj.orbitObj.schedule(1000, "delete");
          }

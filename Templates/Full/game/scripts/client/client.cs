@@ -145,15 +145,19 @@ function clientCmdtoggleVehicleMap(%toggle)
    if(%toggle)
    {
       moveMap.pop();
-	  // clear movement
-	  $mvForwardAction = 0;
-	  $mvBackwardAction = 0;
       vehicleMap.push();
+      // clear movement
+      $mvForwardAction = 0;
+      $mvBackwardAction = 0;
+      if (isObject(ovrModule))
+         ovrModule.activateActionSet("Vehicle");
    }
    else
    {
       vehicleMap.pop();
       moveMap.push();
+      if (isObject(ovrModule))
+         ovrModule.activateActionSet("Player");
    }
 }
 

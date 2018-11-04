@@ -20,9 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-if($GameCanvas == OculusCanvas)
-   $GameCanvas = Canvas;
-
 // Cleanup Dialog created by 'core'
 if( isObject( MessagePopupDlg ) )
    MessagePopupDlg.delete();

@@ -27,11 +27,14 @@
 // anything else will be sent back as an error to the client.
 // All the connect args are passed also to onConnectRequest
 //
-function GameConnection::onConnectRequest( %client, %netAddress, %name )
+function GameConnection::onConnectRequest( %client, %netAddress, %name, %inHMD )
 {
    echo("Connect request from: " @ %netAddress);
    if($Server::PlayerCount >= $pref::Server::MaxPlayers)
       return "CR_SERVERFULL";
+
+   %client.inHMD = %inHMD;
+
    return "";
 }
 

@@ -159,7 +159,14 @@ function yaw(%val)
       %yawAdj *= 0.5;
    }
 
-   $mvYaw += %yawAdj;
+   if ($Video::VREnabled && $OpenVR::HMDRotateYawWithMoveActions)
+   {
+      $OpenVR::HMDmvYaw += %yawAdj;
+   }
+   else
+   {
+      $mvYaw += %yawAdj;
+   }
 }
 
 function pitch(%val)
@@ -649,7 +656,7 @@ moveMap.bind(keyboard, "F7", dropPlayerAtCamera);
 function bringUpOptions(%val)
 {
    if (%val)
-      Canvas.pushDialog(OptionsDlg);
+      $GameCanvas.pushDialog(OptionsDlg);
 }
 
 GlobalActionMap.bind(keyboard, "ctrl o", bringUpOptions);
@@ -757,6 +764,8 @@ function getOut()
 {
    vehicleMap.pop();
    moveMap.push();
+   if (isObject(ovrModule))
+      ovrModule.activateActionSet("Player");
    commandToServer('dismountVehicle');
 }
 
@@ -881,21 +890,3 @@ vehicleMap.bind( gamepad, btn_b, brake );
 vehicleMap.bind( gamepad, btn_x, movebackward );
 // bind exiting the vehicle to a button
 vehicleMap.bindCmd(gamepad, btn_y,"getout();","");
-
-
-// ----------------------------------------------------------------------------
-// Oculus Rift
-// ----------------------------------------------------------------------------
-
-function OVRSensorRotEuler(%pitch, %roll, %yaw)
-{
-   //echo("Sensor euler: " @ %pitch SPC %roll SPC %yaw);
-   $mvRotZ0 = %yaw;
-   $mvRotX0 = %pitch;
-   $mvRotY0 = %roll;
-}
-
-$mvRotIsEuler0 = true;
-$OculusVR::GenerateAngleAxisRotationEvents = false;
-$OculusVR::GenerateEulerRotationEvents = true;
-moveMap.bind( oculusvr, ovr_sensorrotang0, OVRSensorRotEuler );

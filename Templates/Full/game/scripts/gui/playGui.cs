@@ -42,6 +42,8 @@ function PlayGui::onWake(%this)
    
    // just update the action map here
    moveMap.push();
+   if (isObject(ovrModule))
+      ovrModule.activateActionSet("Player");
 
    // hack city - these controls are floating around and need to be clamped
    if ( isFunction( "refreshCenterTextCtrl" ) )
@@ -57,6 +59,8 @@ function PlayGui::onSleep(%this)
    
    // pop the keymaps
    moveMap.pop();
+   if (isObject(ovrModule))
+      ovrModule.activateActionSet("Menu");
 }
 
 function PlayGui::clearHud( %this )

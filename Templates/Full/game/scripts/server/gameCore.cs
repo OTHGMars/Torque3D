@@ -246,7 +246,7 @@ package GameCore
    // "core/scripts/server/clientConnection.cs" in order to initialize, reset,
    // and pass some client scoring variables to playerList.gui -- the scoreHUD.
 
-   function GameConnection::onConnect(%client, %name)
+   function GameConnection::onConnect(%client, %name, %inHMD)
    {
       // Send down the connection error info, the client is responsible for
       // displaying this message if a connection error occurs.
@@ -285,6 +285,8 @@ package GameCore
       %client.score = 0;
       %client.kills = 0;
       %client.deaths = 0;
+
+      %client.inHMD = %inHMD;
 
       //
       echo("CADD: "@ %client @" "@ %client.getAddress());
@@ -607,9 +609,19 @@ function GameCore::onClientLeaveGame(%game, %client)
    // Cleanup the camera
    if (isObject(%client.camera))
       %client.camera.delete();
+
    // Cleanup the player
    if (isObject(%client.player))
+   {
+      %client.player.setVRControllers("", "", "");
+      for (%i = 0; %i < 3; %i++)
+      {
+         if (isObject(%client.player.trackedObj[%i]))
+            %client.player.trackedObj[%i].delete();
+      }
+
       %client.player.delete();
+   }
 }
 
 // Added this stage to creating a player so game types can override it easily.
@@ -952,6 +964,42 @@ function GameCore::spawnPlayer(%game, %client, %spawnPoint, %noControl)
    // the user is unable to control the player/camera.
    if (!isDefined("%noControl"))
       %client.setControlObject(%control);
+
+   if (!%client.inHMD || !$IsTrackedDemo)
+      return;
+
+   // Add the VR tracked objects
+   %hmdTracker = new OpenVRTrackedObject() {
+      datablock = "VR_HMDData";
+      mappedMoveIndex = 0;
+      renderFirstPerson = false;
+   };
+   MissionCleanup.add(%hmdTracker);
+
+   %rightHand = new OpenVRTrackedHand() {
+      datablock = "RightHandData";
+      animateOnServer = false;
+      animSource = "/actions/demo/in/rh_anim";
+      poseSource = "/actions/demo/in/hand_right";
+      mappedMoveIndex = 2;
+      renderFirstPerson = true;
+   };
+   MissionCleanup.add(%rightHand);
+
+   %leftHand = new OpenVRTrackedHand() {
+      datablock = "LeftHandData";
+      animateOnServer = false;
+      animSource = "/actions/demo/in/lh_anim";
+      poseSource = "/actions/demo/in/hand_left";
+      mappedMoveIndex = 1;
+      renderFirstPerson = true;
+   };
+   MissionCleanup.add(%leftHand);
+   
+   %player.setVRControllers(%leftHand, %rightHand, %hmdTracker);
+   %player.trackedObj[0] = %leftHand;
+   %player.trackedObj[1] = %rightHand;
+   %player.trackedObj[2] = %hmdTracker;
 }
 
 function GameCore::pickPointInSpawnSphere(%objectToSpawn, %spawnSphere)

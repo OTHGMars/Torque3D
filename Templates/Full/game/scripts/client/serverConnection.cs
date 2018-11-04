@@ -57,6 +57,17 @@ function GameConnection::initialControlSet(%this)
       {
          Canvas.setContent(PlayGui);
       }
+
+      if ( $Video::VREnabled )
+      {
+         enableOpenVRDisplay(%this, $pref::Video::StereoSEP);
+         ServerConnection.setControlSchemeParameters(true, true, false);
+      }
+      else
+      {
+         disableOpenVRDisplay(%this);
+         ServerConnection.setControlSchemeParameters(false, false, false);
+      }
    }
 }
 
@@ -190,6 +201,8 @@ function disconnect()
 
    // Call destroyServer in case we're hosting
    destroyServer();
+
+   disableOpenVRDisplay(0);
 }
 
 function disconnectedCleanup()

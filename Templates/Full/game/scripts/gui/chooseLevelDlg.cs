@@ -49,6 +49,9 @@ function StartLevel( %mission, %hostingType )
       Canvas.repaint();
    }
 
+   $IsTrackedDemo = (fileBase(%mission) $= "Empty Room");
+   initOpenVR($Pref::Video::VREnabled);
+
    createAndConnectToLocalServer( %serverType, %mission );
 }
 

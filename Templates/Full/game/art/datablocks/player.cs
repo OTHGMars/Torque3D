@@ -499,6 +499,7 @@ datablock PlayerData(DefaultPlayerData)
    cameraDefaultFov = 55.0;
    cameraMinFov = 5.0;
    cameraMaxFov = 65.0;
+   cameraCanBank = true;
 
    debrisShapeName = "art/shapes/actors/common/debris_player.dts";
    debris = playerDebris;

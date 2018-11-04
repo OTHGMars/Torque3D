@@ -81,6 +81,9 @@ function PlayerData::onUnmount(%this, %obj, %vehicle, %node)
    {
       %obj.mountImage(%obj.lastWeapon, $WeaponSlot);
       %obj.setControlObject("");
+
+      if(%obj.getClassName() $= "Player")
+         commandToClient(%obj.client, 'toggleVehicleMap', false);
    }
 }
 
@@ -270,6 +273,15 @@ function PlayerData::onDisabled(%this, %obj, %state)
    commandToClient(%obj.client, 'toggleVehicleMap', false);
 
    // Schedule corpse removal. Just keeping the place clean.
+   %obj.setVRControllers("", "", "");
+   for (%i = 0; %i < 3; %i++)
+   {
+      if (isObject(%obj.trackedObj[%i]))
+      {
+         %obj.trackedObj[%i].schedule($CorpseTimeoutValue - 1000, "startFade", 1000, 0, true);
+         %obj.trackedObj[%i].schedule($CorpseTimeoutValue, "delete");
+      }
+   }
    %obj.schedule($CorpseTimeoutValue - 1000, "startFade", 1000, 0, true);
    %obj.schedule($CorpseTimeoutValue, "delete");
 }

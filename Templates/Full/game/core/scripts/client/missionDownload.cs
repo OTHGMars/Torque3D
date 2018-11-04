@@ -127,7 +127,7 @@ function connect(%server)
 {
    %conn = new GameConnection(ServerConnection);
    RootGroup.add(ServerConnection);
-   %conn.setConnectArgs($pref::Player::Name);
+   %conn.setConnectArgs($pref::Player::Name, (OpenVR::isHmdPresent() && $Video::VREnabled));
    %conn.setJoinPassword($Client::Password);
    %conn.connect(%server);
 }

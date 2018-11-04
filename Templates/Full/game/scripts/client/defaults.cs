@@ -28,7 +28,21 @@ exec( "core/scripts/client/defaults.cs" );
 // well as any overloaded core defaults here.
 $PhysXLogWarnings = false;
 
-
+$Pref::Video::VREnabled = false;
+$pref::Video::StereoSBS = false;
+$pref::Video::StereoSEP = true;
+$pref::OVR::Seated = true;
+$pref::OVR::Standing = false;
+$pref::OVR::Dashboard = false;
+$pref::OVR::Overlay = true;
+$pref::OVR::XfmStat = true;
+$pref::OVR::XfmRel = false;
+$pref::OVR::OverlayRes = "1024 x 768";
+$pref::OVR::Overlaywidth = 1.33;
+$pref::OVR::HQOverlay = false;
+$pref::OVR::CurvedOverlay = false;
+$pref::OVR::CurveMin = 1;
+$pref::OVR::CurveMax = 10;
 
 // Finally load the preferences saved from the last
 // game execution if they exist.
