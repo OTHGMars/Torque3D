@@ -37,6 +37,10 @@
 
 #include "T3D/gameBase/gameProcess.h"
 
+#ifdef TORQUE_EXTENDED_MOVE
+#include "T3D/gameBase/extended/extendedMove.h"
+#endif
+
 class Material;
 class ParticleEmitter;
 class ParticleEmitterData;
@@ -407,7 +411,8 @@ protected:
       MoveMask     = Parent::NextFreeMask << 1,
       ImpactMask   = Parent::NextFreeMask << 2,
       TriggerMask      = Parent::NextFreeMask << 3,
-      NextFreeMask     = Parent::NextFreeMask << 4
+      ControllerMask      = Parent::NextFreeMask << 4,
+      NextFreeMask     = Parent::NextFreeMask << 5
    };
 
    SimObjectPtr<ParticleEmitter> mSplashEmitter[PlayerData::NUM_SPLASH_EMITTERS];
@@ -529,7 +534,7 @@ protected:
    Point3F mLastWaterPos;     ///< Same as mLastPos, but for water
 
 #ifdef TORQUE_OPENVR
-   SimObjectPtr<OpenVRTrackedObject> mControllers[2];
+   SimObjectPtr<OpenVRTrackedObject> mControllers[ExtendedMove::MaxPositionsRotations];
 #endif
 
    struct ContactInfo 
@@ -710,6 +715,13 @@ public:
    void getRenderMuzzleTransform(U32 imageSlot,MatrixF* mat);   
 
    virtual void getMuzzleVector(U32 imageSlot,VectorF* vec);
+
+   /// Gets the view transform for a particular eye, taking into account the current absolute 
+   /// orient and position values of the display device and adjusting for player pose.
+   virtual void getEyeCameraTransform( IDisplayDevice* display, S32 eyeId, MatrixF* outMat );
+
+   /// Gets the transform for base VR tracking
+   virtual void getVRCameraTransform(MatrixF *mat);
    /// @}
 
    F32 getSpeed() const;

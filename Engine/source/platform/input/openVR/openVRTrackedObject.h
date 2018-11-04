@@ -1,3 +1,25 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2013 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
 #ifndef _OPENVR_TRACKED_OBJECT_H_
 #define _OPENVR_TRACKED_OBJECT_H_
 
@@ -10,16 +32,18 @@
 #ifndef _GFXPRIMITIVEBUFFER_H_
 #include "gfx/gfxPrimitiveBuffer.h"
 #endif
+#ifndef _NETSTRINGTABLE_H_
+#include "sim/netStringTable.h"
+#endif
 #ifndef _TSSHAPEINSTANCE_H_
 #include "ts/tsShapeInstance.h"
 #endif
 #include "collision/earlyOutPolyList.h"
+#include "math/mTransform.h"
 
 #include <openvr.h>
 
 class BaseMatInstance;
-class OpenVRRenderModel;
-class PhysicsBody;
 
 class OpenVRTrackedObjectData : public GameBaseData {
 public:
@@ -28,8 +52,17 @@ public:
    StringTableEntry mShapeFile;
    Resource<TSShape> mShape; ///< Torque model
 
-   Point3F mCollisionBoxMin;
-   Point3F mCollisionBoxMax;
+   // Maximum range for tracking positions
+   F32 mTrackingScale;
+
+   // Shape render offset
+   TransformF mShapeOffset;
+
+   // Rotation QuatF from mShapeOffset
+   QuatF mShapeRot;
+
+   // Transform when tracked device is disconnected
+   TransformF mDisconnectedTransform;
 
 public:
 
@@ -47,109 +80,92 @@ public:
    virtual void unpackData(BitStream* stream);
 };
 
-/// Implements a GameObject which tracks an OpenVR controller
+/// Implements a GameObject which tracks an OpenVR device
 class OpenVRTrackedObject : public GameBase
 {
    typedef GameBase Parent;
 
+protected:
    enum MaskBits
    {
       UpdateMask = Parent::NextFreeMask << 0,
-      NextFreeMask = Parent::NextFreeMask << 1
+      MoveMask = Parent::NextFreeMask << 1,
+      NextFreeMask = Parent::NextFreeMask << 2
    };
 
-   struct RenderModelSlot
+   enum
    {
-      StringTableEntry componentName; ///< Component name
-      S16 mappedNodeIdx; ///< Mapped node idx in mShape
-      OpenVRRenderModel *nativeModel; ///< Native model
+      TrackedPosBits = 10,
+      TrackedQuatBits = 9,
+   };
+
+   struct StateDelta
+   {
+      //Point3F pos;
+      VectorF posVec;
+      QuatF rot;
    };
 
    OpenVRTrackedObjectData *mDataBlock;
 
    /// @name Rendering
    /// {
-   TSShapeInstance *mShapeInstance; ///< Shape used to render controller (uses native model otherwise)
-   StringTableEntry mModelName;
-   OpenVRRenderModel *mBasicModel; ///< Basic model
-   Vector<RenderModelSlot> mRenderComponents;
+   TSShapeInstance *mShapeInstance; ///< Shape rendered
    /// }
 
-   S32 mDeviceIndex; ///< Controller idx in openvr (for direct updating)
+   String mPoseSourceName; ///< If set, the controlling client will use real-time data from this pose for rendering
+   NetStringHandle mPoseSourceStringHandle;
+   S32 mPoseActionIndex; ///< Action index. Set on controlling client when the input source is resolved
    S32 mMappedMoveIndex; ///< Movemanager move index for rotation
 
-   vr::VRControllerState_t mCurrentControllerState;
-   vr::VRControllerState_t mPreviousControllerState;
+   StateDelta mDelta;
+   Point3F mPosition;
+   QuatF mRotation;
+   bool mbConnected;
+   bool mbOwnedByClient;
+   bool mbRenderFirstPerson;  ///< Should this object be rendered on the controlling client
 
-   IDevicePose mPose; ///< Current openvr pose data, or reconstructed data from the client
-
-   Convex* mConvexList;
-   EarlyOutPolyList     mClippedList;
-   PhysicsBody *mPhysicsRep;
-
-   SimObjectPtr<SceneObject> mCollisionObject; ///< Object we're currently colliding with
-   SimObjectPtr<SceneObject> mInteractObject;  ///< Object we've designated as important to interact with
-
-   bool mHoldInteractedObject; ///< Performs pickup logic with mInteractObject
-   bool mIgnoreParentRotation; ///< Ignores the rotation of the parent object
-
-   static bool smDebugControllerPosition; ///< Shows latest controller position in DebugDrawer
-   static bool smDebugControllerMovePosition; ///< Shows move position in DebugDrawer
-   static U32 sServerCollisionMask;
-   static U32 sClientCollisionMask;
+   ShapeBase* mOwnerObject; ///< The ShapeBase object that this device is controlled by.
 
 public:
    OpenVRTrackedObject();
    virtual ~OpenVRTrackedObject();
 
-   void updateRenderData();
-   void setupRenderDataFromModel(bool loadComponentModels);
+private:
+   bool _createShape();
 
-   void clearRenderData();
+protected:
+   virtual void getActionIndex();
 
+public:
    DECLARE_CONOBJECT(OpenVRTrackedObject);
 
    static void initPersistFields();
+   static bool _setFieldInputSource(void* object, const char* index, const char* data);
+   static bool _setFieldRenderFP(void* object, const char* index, const char* data);
+   void setInputSource(const char* name);
+   void setRenderFirstPerson(bool doRender);
 
    virtual void inspectPostApply();
 
    bool onAdd();
    void onRemove();
 
-
-   void _updatePhysics();
    bool onNewDataBlock(GameBaseData *dptr, bool reload);
-
-   void setInteractObject(SceneObject* object, bool holding);
-
-   void setTransform(const MatrixF &mat);
-   void setModelName(String &modelName);
 
    U32  packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
    void unpackUpdate(NetConnection *conn, BitStream *stream);
-   void writePacketData(GameConnection *conn, BitStream *stream);
-   void readPacketData(GameConnection *conn, BitStream *stream);
 
    void prepRenderImage(SceneRenderState *state);
-
-   MatrixF getTrackedTransform();
-   MatrixF getLastTrackedTransform();
-   MatrixF getBaseTrackingTransform();
-
-   U32 getCollisionMask();
-   void updateWorkingCollisionSet();
 
    // Time management
    void updateMove(const Move *move);
    void processTick(const Move *move);
    void interpolateTick(F32 delta);
    void advanceTime(F32 dt);
+   void setLocalRenderTransform();
 
-   // Collision
-   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
-   void buildConvex(const Box3F& box, Convex* convex);
-   bool testObject(SceneObject* enter);
-
+   void setOwnerObject(ShapeBase* obj) { mOwnerObject = obj; }
 };
 
 #endif // _OPENVR_TRACKED_OBJECT_H_

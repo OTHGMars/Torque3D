@@ -1,6 +1,27 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2013 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
 
-#ifndef _OPENVRDEVICE_H_
-#define _OPENVRDEVICE_H_
+#ifndef _OPENVR_PROVIDER_H_
+#define _OPENVR_PROVIDER_H_
 
 #include "math/mQuat.h"
 #include "math/mPoint4.h"
@@ -12,11 +33,12 @@
 #include "gfx/gfxPrimitiveBuffer.h"
 #include "gfx/gfxTarget.h"
 
+#include "platform/input/OpenVR/openVRStructs.h"
 #include "platform/input/IInputDevice.h"
 #include "platform/input/event.h"
 #include "platform/output/IDisplayDevice.h"
-
-#include <openvr.h>
+#include "materials/materialDefinition.h"
+#include "materials/baseMatInstance.h"
 
 class OpenVRHMDDevice;
 class OpenVROverlay;
@@ -25,6 +47,7 @@ class SceneRenderState;
 struct MeshRenderInst;
 class Namespace;
 class NamedTexTarget;
+class OpenVRRenderModel;
 
 typedef vr::VROverlayInputMethod OpenVROverlayInputMethod;
 typedef vr::VROverlayTransformType OpenVROverlayTransformType;
@@ -35,6 +58,8 @@ typedef vr::ETrackingUniverseOrigin OpenVRTrackingUniverseOrigin;
 typedef vr::EOverlayDirection OpenVROverlayDirection;
 typedef vr::EVRState OpenVRState;
 typedef vr::TrackedDeviceClass OpenVRTrackedDeviceClass;
+typedef vr::EVRControllerAxisType OpenVRControllerAxisType;
+typedef vr::ETrackedControllerRole OpenVRTrackedControllerRole;
 
 DefineEnumType(OpenVROverlayInputMethod);
 DefineEnumType(OpenVROverlayTransformType);
@@ -45,6 +70,8 @@ DefineEnumType(OpenVRTrackingUniverseOrigin);
 DefineEnumType(OpenVROverlayDirection);
 DefineEnumType(OpenVRState);
 DefineEnumType(OpenVRTrackedDeviceClass);
+DefineEnumType(OpenVRControllerAxisType);
+DefineEnumType(OpenVRTrackedControllerRole);
 
 namespace OpenVRUtil
 {
@@ -81,143 +108,31 @@ namespace OpenVRUtil
    }
 };
 
-template<int TEXSIZE> class VRTextureSet
+/** The mappable IVRInput action types */
+enum EOpenVRActionType
 {
-public:
-   static const int TextureCount = TEXSIZE;
-   GFXTexHandle mTextures[TEXSIZE];
-   U32 mIndex;
-
-   VRTextureSet() : mIndex(0)
-   {
-   }
-
-   void init(U32 width, U32 height, GFXFormat fmt, GFXTextureProfile *profile, const String &desc)
-   {
-      for (U32 i = 0; i < TextureCount; i++)
-      {
-         mTextures[i].set(width, height, fmt, profile, desc);
-      }
-   }
-
-   void clear()
-   {
-      for (U32 i = 0; i < TextureCount; i++)
-      {
-         mTextures[i] = NULL;
-      }
-   }
-
-   void advance()
-   {
-      mIndex = (mIndex + 1) % TextureCount;
-   }
-
-   GFXTexHandle& getTextureHandle()
-   {
-      return mTextures[mIndex];
-   }
+   OpenVRActionType_Digital = 0,
+   OpenVRActionType_Analog = 1,
+   OpenVRActionType_Pose = 2,
+   OpenVRActionType_Skeleton = 3,
 };
+typedef EOpenVRActionType OpenVRActionType;
+DefineEnumType(OpenVRActionType);
 
-/// Simple class to handle rendering native OpenVR model data
-class OpenVRRenderModel
-{
-public:
-   typedef GFXVertexPNT VertexType;
-   GFXVertexBufferHandle<VertexType> mVertexBuffer;
-   GFXPrimitiveBufferHandle mPrimitiveBuffer;
-   BaseMatInstance* mMaterialInstance; ///< Material to use for rendering. NOTE:  
-   Box3F mLocalBox;
-
-   OpenVRRenderModel() : mMaterialInstance(NULL)
-   {
-   }
-
-   ~OpenVRRenderModel()
-   {
-      SAFE_DELETE(mMaterialInstance);
-   }
-
-   Box3F getWorldBox(MatrixF &mat)
-   {
-      Box3F ret = mLocalBox;
-      mat.mul(ret);
-      return ret;
-   }
-
-   bool init(const vr::RenderModel_t & vrModel, StringTableEntry materialName);
-   void draw(SceneRenderState *state, MeshRenderInst* renderInstance);
-};
-
-struct OpenVRRenderState
-{
-   vr::IVRSystem *mHMD;
-
-   FovPort mEyeFov[2];
-   MatrixF mEyePose[2];
-   MatrixF mHMDPose;
-
-   RectI mEyeViewport[2];
-   GFXTextureTargetRef mStereoRT;
-
-   GFXTexHandle mStereoRenderTexture;
-   GFXTexHandle mStereoDepthTexture;
-
-   VRTextureSet<4> mOutputEyeTextures;
-
-   GFXDevice::GFXDeviceRenderStyles mRenderMode;
-
-   bool setupRenderTargets(GFXDevice::GFXDeviceRenderStyles mode);
-
-   void renderPreview();
-
-   void reset(vr::IVRSystem* hmd);
-   void updateHMDProjection();
-};
+//------------------------------------------------------------
 
 class OpenVRProvider : public IDisplayDevice, public IInputDevice
 {
+protected:
+   enum
+   {
+      MaxActiveActionSets = 5,  // The maximum number of action set layers that can be active at one time.
+   };
+
 public:
-
-   enum DataDifferences {
-      DIFF_NONE = 0,
-      DIFF_ROT = (1 << 0),
-      DIFF_ROTAXISX = (1 << 1),
-      DIFF_ROTAXISY = (1 << 2),
-      DIFF_ACCEL = (1 << 3),
-      DIFF_ANGVEL = (1 << 4),
-      DIFF_MAG = (1 << 5),
-      DIFF_POS = (1 << 6),
-      DIFF_STATUS = (1 << 7),
-
-      DIFF_ROTAXIS = (DIFF_ROTAXISX | DIFF_ROTAXISY),
-      DIFF_RAW = (DIFF_ACCEL | DIFF_ANGVEL | DIFF_MAG),
-   };
-
-   struct LoadedRenderModel
-   {
-      StringTableEntry name;
-      vr::RenderModel_t *vrModel;
-      OpenVRRenderModel *model;
-      vr::EVRRenderModelError modelError;
-      S32 textureId;
-      bool loadedTexture;
-   };
-
-   struct LoadedRenderTexture
-   {
-      U32 vrTextureId;
-      vr::RenderModel_TextureMap_t *vrTexture;
-      GFXTextureObject *texture;
-      NamedTexTarget *targetTexture;
-      vr::EVRRenderModelError textureError;
-   };
 
    OpenVRProvider();
    ~OpenVRProvider();
-
-   typedef Signal <void(const vr::VREvent_t &evt)> VREventSignal;
-   VREventSignal& getVREventSignal() { return mVREventSignal;  }
 
    static void staticInit();
 
@@ -229,7 +144,6 @@ public:
 
    /// @name Input handling
    /// {
-   void buildInputCodeTable();
    virtual bool process();
    /// }
 
@@ -265,22 +179,21 @@ public:
 
    bool _handleDeviceEvent(GFXDevice::GFXDeviceEventType evt);
 
-   S32 getDisplayDeviceId() const;
    /// }
 
    /// @name OpenVR handling
    /// {
    void processVREvent(const vr::VREvent_t & event);
-
-   void updateTrackedPoses();
-   void submitInputChanges();
+   void updateHMDPose();
+   IDevicePose getTrackedDevicePose(U32 idx);
 
    void resetSensors();
+   void orientUniverse(const MatrixF &mat);
+   void rotateUniverse(const F32 yaw);
 
-   void mapDeviceToEvent(U32 deviceIdx, S32 eventIdx);
-   void resetEventMap();
+   //void mapDeviceToEvent(U32 deviceIdx, S32 eventIdx);
+   //void resetEventMap();
 
-   IDevicePose getTrackedDevicePose(U32 idx);
    /// }
 
    /// @name Overlay registration
@@ -291,10 +204,10 @@ public:
 
    /// @name Model loading
    /// {
-   const S32 preloadRenderModel(StringTableEntry name);
-   const S32 preloadRenderModelTexture(U32 index);
+   const S32 preloadRenderModel(StringTableEntry deviceName, StringTableEntry name);
+   const S32 preloadRenderModelTexture(StringTableEntry deviceName, U32 index);
    bool getRenderModel(S32 idx, OpenVRRenderModel **ret, bool &failed);
-   bool getRenderModelTexture(S32 idx, GFXTextureObject **outTex, bool &failed);
+   bool getRenderModelTexture(S32 idx, bool &failed);
    bool getRenderModelTextureName(S32 idx, String &outName);
    void resetRenderModels();
    /// }
@@ -313,8 +226,18 @@ public:
    void setKeyboardTransformAbsolute(const MatrixF &xfm);
    void setKeyboardPositionForOverlay(OpenVROverlay *overlay, const RectI &rect);
 
-   void getControllerDeviceIndexes(vr::TrackedDeviceClass &deviceClass, Vector<S32> &outList);
    StringTableEntry getControllerModel(U32 idx);
+
+   U32 getOVRDeviceType() { return mDeviceType; }
+
+   String getDeviceClass(U32 deviceIdx);
+   String getDevicePropertyString(U32 deviceIdx, U32 propID);
+   bool getDevicePropertyBool(U32 deviceIdx, U32 propID);
+   S32 getDevicePropertyInt(U32 deviceIdx, U32 propID);
+   String getDevicePropertyUInt(U32 deviceIdx, U32 propID);
+   F32 getDevicePropertyFloat(U32 deviceIdx, U32 propID);
+   String getControllerAxisType(U32 deviceIdx, U32 axisID);
+   String getControllerRole(U32 deviceIdx);
    /// }
 
    /// @name OpenVR state
@@ -323,58 +246,80 @@ public:
    vr::IVRRenderModels *mRenderModels;
    String mDriver;
    String mDisplay;
-   vr::TrackedDevicePose_t mTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
-   IDevicePose mCurrentDevicePose[vr::k_unMaxTrackedDeviceCount];
-   IDevicePose mPreviousInputTrackedDevicePose[vr::k_unMaxTrackedDeviceCount];
-   U32 mValidPoseCount;
-
-   vr::VRControllerState_t mCurrentControllerState[vr::k_unMaxTrackedDeviceCount];
-   vr::VRControllerState_t mPreviousCurrentControllerState[vr::k_unMaxTrackedDeviceCount];
-
-   char mDeviceClassChar[vr::k_unMaxTrackedDeviceCount];
-
+   vr::TrackedDevicePose_t mTrackedDevicePose;
+   IDevicePose mCurrentHMDPose;
    OpenVRRenderState mHMDRenderState;
-   GFXAdapterLUID mLUID;
 
    vr::ETrackingUniverseOrigin mTrackingSpace;
+   F32 mStandingHMDHeight;
 
    Vector<OpenVROverlay*> mOverlays;
-
-   VREventSignal mVREventSignal;
-   Namespace *mOpenVRNS;
 
    Vector<LoadedRenderModel> mLoadedModels;
    Vector<LoadedRenderTexture> mLoadedTextures;
    Map<StringTableEntry, S32> mLoadedModelLookup;
    Map<U32, S32> mLoadedTextureLookup;
 
-   Map<U32, S32> mDeviceEventMap;
    /// }
 
    GuiCanvas* mDrawCanvas;
    GameConnection* mGameConnection;
 
-   static U32 OVR_SENSORROT[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_SENSORROTANG[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_SENSORVELOCITY[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_SENSORANGVEL[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_SENSORMAGNETOMETER[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_SENSORPOSITION[vr::k_unMaxTrackedDeviceCount];
-
-   static U32 OVR_BUTTONPRESSED[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_BUTTONTOUCHED[vr::k_unMaxTrackedDeviceCount];
-
-   static U32 OVR_AXISNONE[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_AXISTRACKPAD[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_AXISJOYSTICK[vr::k_unMaxTrackedDeviceCount];
-   static U32 OVR_AXISTRIGGER[vr::k_unMaxTrackedDeviceCount];
-
    /// @name HMD Rotation offset
    /// {
-   static EulerF smHMDRotOffset;
+   static F32 smUniverseYawOffset;
    static F32 smHMDmvYaw;
-   static F32 smHMDmvPitch;
    static bool smRotateYawWithMoveActions;
+   static MatrixF smUniverseRotMat;
+   /// }
+
+   static String smShapeCachePath;
+   static String smManifestPath;
+
+   /// @name IVRInput handling
+   /// {
+private:
+   bool mInputInitialized;
+   Vector<VRActionSet> mActionSets;
+   Vector<VRAnalogAction> mAnalogActions;
+   Vector<VRDigitalAction> mDigitalActions;
+   Vector<VRPoseAction> mPoseActions;
+   Vector<VRSkeletalAction> mSkeletalActions;
+   Vector<vr::VRActionHandle_t> mHapticOutputs;
+
+   U32 mNumSetsActive;
+   vr::VRActiveActionSet_t mActiveSets[MaxActiveActionSets];
+   S32 mActiveSetIndexes[MaxActiveActionSets];
+   void resetActiveSets();
+
+   bool initInput();
+   void processDigitalActions();
+   void processAnalogActions();
+   void processPoseActions();
+   void processSkeletalActions();
+
+public:
+   S32 addActionSet(const char* setName);
+   S32 addAnalogAction(U32 setIndex, const char* actionName, const char* callbackFunc);
+   S32 addDigitalAction(U32 setIndex, const char* actionName, const char* callbackFunc);
+   S32 addPoseAction(U32 setIndex, const char* actionName, const char* poseCallback, const char* velocityCallback, S32 moveIndex);
+   S32 addSkeletalAction(U32 setIndex, const char* actionName, S32 moveIndex);
+   S32 addHapticOutput(const char* outputName);
+
+   S32 getPoseIndex(const char* actionName);
+   bool getCurrentPose(S32 poseIndex, Point3F& position, QuatF& rotation);
+   bool setPoseCallbacks(S32 poseIndex, const char* poseCallback, const char* velocityCallback);
+   S32 getSkeletonIndex(const char* actionName);
+   bool getSkeletonNodes(S32 skeletonIndex, vr::VRBoneTransform_t* boneData);
+   bool setSkeletonMode(S32 skeletonIndex, bool withController);
+
+   bool activateActionSet(S32 controllerIndex, U32 setIndex);
+   bool pushActionSetLayer(S32 controllerIndex, U32 setIndex);
+   bool popActionSetLayer(S32 controllerIndex, U32 setIndex);
+   bool triggerHapticEvent(U32 actionIndex, float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude);
+
+   void showActionOrigins(U32 setIndex, OpenVRActionType actionType, U32 actionIndex);
+   void showActionSetBinds(U32 setIndex);
    /// }
 
 public:
@@ -382,7 +327,7 @@ public:
    static const char* getSingletonName() { return "OpenVRProvider"; }
 };
 
-/// Returns the OculusVRDevice singleton.
+/// Returns the OpenVRProvider singleton.
 #define OPENVR ManagedSingleton<OpenVRProvider>::instance()
 
-#endif   // _OCULUSVRDEVICE_H_
+#endif   // _OPENVR_PROVIDER_H_

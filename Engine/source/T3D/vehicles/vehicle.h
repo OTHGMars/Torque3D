@@ -310,6 +310,8 @@ public:
    virtual void mountObject( SceneObject *obj, S32 node, const MatrixF &xfm = MatrixF::Identity );
    /// @}
 
+   virtual void getEyeCameraTransform( IDisplayDevice *display, S32 eyeId, MatrixF *outMat );
+   virtual void getVRCameraTransform(MatrixF *mat);
    DECLARE_CONOBJECT(Vehicle);
 };
 

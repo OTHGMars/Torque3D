@@ -2044,3 +2044,29 @@ void Vehicle::_renderMuzzleVector( ObjectRenderInst *ri, SceneRenderState *state
 
    PrimBuild::end();
 }
+
+void Vehicle::getEyeCameraTransform(IDisplayDevice *displayDevice, S32 eyeId, MatrixF *outMat)
+{
+   DisplayPose newPose;
+   displayDevice->getFrameEyePose(&newPose, eyeId);
+   Point3F eyePosition[2];
+   displayDevice->getEyeOffsets(eyePosition);
+
+   MatrixF hmdMat(1);
+   newPose.orientation.setMatrix(&hmdMat);
+   hmdMat.setPosition(newPose.position);
+
+   MatrixF cameraTransform(1);
+   getVRCameraTransform(&cameraTransform);
+   *outMat = cameraTransform * hmdMat;
+}
+
+void Vehicle::getVRCameraTransform(MatrixF * mat)
+{
+   // Returns eye to world space transform
+   S32 eyeNode = mDataBlock->eyeNode;
+   if (eyeNode != -1 && mShapeInstance)
+      mat->mul(getRenderTransform(), mShapeInstance->mNodeTransforms[eyeNode]);
+   else
+      *mat = getRenderTransform();
+}

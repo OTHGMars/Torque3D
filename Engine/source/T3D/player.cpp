@@ -2217,6 +2217,16 @@ void Player::processTick(const Move* move)
          }
       }
    }
+
+#ifdef TORQUE_OPENVR
+   for (S32 i = 0; i < ExtendedMove::MaxPositionsRotations; ++i)
+   {
+      if (mControllers[i])
+      {
+         mControllers[i]->processTick(move);
+      }
+   }
+#endif
 }
 
 void Player::interpolateTick(F32 dt)
@@ -2299,6 +2309,14 @@ void Player::interpolateTick(F32 dt)
 
    updateLookAnimation(dt);
    mDelta.dt = dt;
+
+#ifdef TORQUE_OPENVR
+   for (S32 i = 0; i < ExtendedMove::MaxPositionsRotations; ++i)
+   {
+      if (mControllers[i])
+         mControllers[i]->interpolateTick(dt);
+   }
+#endif
 }
 
 void Player::advanceTime(F32 dt)
@@ -2624,19 +2642,6 @@ void Player::updateMove(const Move* move)
    }
    mDelta.move = *move;
 
-#ifdef TORQUE_OPENVR
-   if (mControllers[0])
-   {
-      mControllers[0]->processTick(move);
-   }
-
-   if (mControllers[1])
-   {
-      mControllers[1]->processTick(move);
-   }
-
-#endif
-
    // Is waterCoverage high enough to be 'swimming'?
    {
       bool swimming = mWaterCoverage > 0.65f && canSwim();      
@@ -2706,7 +2711,7 @@ void Player::updateMove(const Move* move)
          MathUtils::getAnglesFromVector(vecForward, yawAng, pitchAng);
 
          mRot = EulerF(0);
-         mRot.z = yawAng;
+         mRot.z = -yawAng;
          mHead = EulerF(0);
 
          while (mRot.z < 0.0f)
@@ -6315,6 +6320,24 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    }
    retMask = afx_packUpdate(con, mask, stream, retMask);
 
+#ifdef TORQUE_OPENVR
+   if (stream->writeFlag(mask & ControllerMask))
+   {
+      for (S32 i = 0; i < ExtendedMove::MaxPositionsRotations; ++i)
+      {
+         if (stream->writeFlag(mControllers[i] != NULL))
+         {
+            S32 gIndex = con->getGhostIndex(mControllers[i]);
+
+            if (stream->writeFlag(gIndex != -1))
+               stream->writeInt(gIndex, NetConnection::GhostIdBitSize);
+            else // Will have to try again later
+               retMask |= ControllerMask;
+         }
+      }
+   }
+#endif
+
    // The rest of the data is part of the control object packet update.
    // If we're controlled by this client, we don't need to send it.
    // we only need to send it if this is the initial update - in that case,
@@ -6359,6 +6382,7 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       stream->writeFloat(getEnergyLevel() / mDataBlock->maxEnergy, EnergyLevelBits);
    else
       stream->writeFloat(0.f, EnergyLevelBits);
+
    return retMask;
 }
 
@@ -6419,6 +6443,29 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
    }
 
    afx_unpackUpdate(con, stream);
+
+#ifdef TORQUE_OPENVR
+   if (stream->readFlag()) // ControllerMask
+   {
+      for (S32 i = 0; i < ExtendedMove::MaxPositionsRotations; ++i)
+      {
+         if (stream->readFlag()) // mControllers[i] != NULL
+         {
+            if (stream->readFlag()) // GhostIndex
+            {
+               S32 gIndex = stream->readInt(NetConnection::GhostIdBitSize);
+               OpenVRTrackedObject* obj = dynamic_cast<OpenVRTrackedObject*>(con->resolveGhost(gIndex));
+               if (obj)
+               {
+                  mControllers[i] = obj;
+                  obj->setOwnerObject(this);
+               }
+            }
+         }
+      }
+   }
+#endif
+
    // Done if controlled by client ( and not initial update )
    if(stream->readFlag())
       return;
@@ -7252,6 +7299,11 @@ void Player::prepRenderImage( SceneRenderState* state )
    bool renderPlayer = true;
    bool renderItems = true;
 
+#ifdef TORQUE_OPENVR
+   if (mControllers[2] != NULL)
+      return; // Rendering a tracked headset, don't render player
+#endif
+
    /*
    if ( mPhysicsRep && Con::getBoolVariable("$PhysicsPlayer::DebugRender",false) )
    {
@@ -7638,37 +7690,81 @@ void Player::restoreFootfallFX(bool decals, bool sounds, bool dust)
       footfallDustOverride--; 
    noFootfallFX = (footfallDecalOverride > 0 && footfallSoundOverride > 0 && footfallDustOverride > 0);
 }
+
+void Player::getVRCameraTransform(MatrixF* mat)
+{
+   Point3F renderPos = mRenderObjToWorld.getPosition();
+
+   switch (mPose) 
+   {
+   case StandPose:
+   case SprintPose:
+      renderPos.z += mDataBlock->eyeHeight;
+      break;
+
+   case PronePose:
+   case SwimPose:
+   case CrouchPose:
+      if (mShapeInstance && (mDataBlock->eyeNode != -1))
+      {
+         renderPos.z += mShapeInstance->mNodeTransforms[mDataBlock->eyeNode][11] * getScale().z;
+      }
+      else
+         renderPos.z += mDataBlock->eyeHeight;
+      break;
+
+   default:
+      renderPos.z += mDataBlock->eyeHeight;
+      break;
+   }
+
+   mat->identity();
+   mat->setPosition(renderPos);
+}
+
+void Player::getEyeCameraTransform(IDisplayDevice* display, S32 eyeId, MatrixF* outMat)
+{
+   MatrixF temp(1);
+   Point3F eyePos;
+   Point3F rotEyePos;
+
+   DisplayPose newPose;
+   display->getFrameEyePose(&newPose, eyeId);
+
+   eyePos = mRenderObjToWorld.getPosition();
+   if ((mPose == CrouchPose) || (mPose == CrouchPose) || (mPose == CrouchPose))
+   {
+      if (mShapeInstance && (mDataBlock->eyeNode != -1))
+         eyePos.z += mShapeInstance->mNodeTransforms[mDataBlock->eyeNode][11] * getScale().z;
+   }
+   else
+      eyePos.z += mDataBlock->eyeHeight;
+   newPose.orientation.setMatrix(&temp);
+   temp.setPosition(newPose.position + eyePos);
+
+   *outMat = temp;
+}
+
 #ifdef TORQUE_OPENVR
 void Player::setControllers(Vector<OpenVRTrackedObject*> controllerList)
 {
-   mControllers[0] = controllerList.size() > 0 ? controllerList[0] : NULL;
-   mControllers[1] = controllerList.size() > 1 ? controllerList[1] : NULL;
+   for (S32 i = 0; i < ExtendedMove::MaxPositionsRotations; ++i)
+   {
+      mControllers[i] = controllerList.size() > i ? controllerList[i] : NULL;
+      if (mControllers[i])
+         mControllers[i]->setOwnerObject(this);
+   }
+
+   setMaskBits(ControllerMask);
 }
 
-ConsoleMethod(Player, setVRControllers, void, 4, 4, "")
+DefineEngineMethod(Player, setVRControllers, void, (OpenVRTrackedObject* leftHand, OpenVRTrackedObject* rightHand, OpenVRTrackedObject* hmd), ,
+   "Assigns tracked objects to the three available slots on the player.")
 {
-   OpenVRTrackedObject *controllerL, *controllerR;
    Vector<OpenVRTrackedObject*> list;
-
-   if (Sim::findObject(argv[2], controllerL))
-   {
-      list.push_back(controllerL);
-   }
-   else
-   {
-      list.push_back(NULL);
-   }
-
-   if (Sim::findObject(argv[3], controllerR))
-   {
-      list.push_back(controllerR);
-   }
-   else
-   {
-      list.push_back(NULL);
-   }
-
+   list.push_back(leftHand);
+   list.push_back(rightHand);
+   list.push_back(hmd);
    object->setControllers(list);
 }
-
 #endif

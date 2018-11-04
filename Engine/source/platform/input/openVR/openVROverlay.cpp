@@ -1,9 +1,33 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2013 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
 #include "platform/input/openVR/openVRProvider.h"
 #include "platform/input/openVR/openVROverlay.h"
 
+#ifndef LINUX
 #include "gfx/D3D11/gfxD3D11Device.h"
 #include "gfx/D3D11/gfxD3D11TextureObject.h"
 #include "gfx/D3D11/gfxD3D11EnumTranslate.h"
+#endif
 
 #ifdef TORQUE_OPENGL
 #include "gfx/gl/gfxGLDevice.h"
@@ -25,17 +49,16 @@ IMPLEMENT_CONOBJECT(OpenVROverlay);
 
 OpenVROverlay::OpenVROverlay()
 {
+   mTransformDeviceIndex = vr::k_unTrackedDeviceIndex_Hmd;
    mTransform = MatrixF(1);
    mOverlayWidth = 1.5f;
    mOverlayFlags = 0;
 
-   mOverlayColor = LinearColorF(1, 1, 1, 1);
-   mTrackingOrigin = vr::TrackingUniverseSeated;
+   mOverlayColor = LinearColorF(0, 0, 0, 1);
 
-   mTargetFormat = GFXFormatR8G8B8A8_LINEAR_FORCE; // needed for openvr!
-   mManualMouseHandling = true;
-
+   mInputMethod = vr::VROverlayInputMethod_None;
    mMouseScale = Point2F(1, 1);
+   mIsHQOverlay = false;
 }
 
 OpenVROverlay::~OpenVROverlay()
@@ -75,7 +98,7 @@ void OpenVROverlay::initPersistFields()
    addProtectedField("transformRotation", TypeMatrixRotation, Offset(mTransform, OpenVROverlay), &setProtectedOverlayDirty, &defaultProtectedGetFn,
       "Rotation of overlay.");
    addProtectedField("transformDeviceIndex", TypeS32, Offset(mTransformDeviceIndex, OpenVROverlay), &setProtectedOverlayDirty, &defaultProtectedGetFn,
-      "Rotation of overlay.");
+      "The device to attach the overlay to when transformType is TrackedDeviceRelative. The HMD is always index 0.");
    addProtectedField("transformDeviceComponent", TypeString, Offset(mTransformDeviceComponent, OpenVROverlay), &setProtectedOverlayDirty, &defaultProtectedGetFn,
       "Rotation of overlay.");
 
@@ -84,13 +107,11 @@ void OpenVROverlay::initPersistFields()
    addProtectedField("mouseScale", TypePoint2F, Offset(mMouseScale, OpenVROverlay), &setProtectedOverlayDirty, &defaultProtectedGetFn,
       "Scale of mouse input.");
 
-   addProtectedField("trackingOrigin", TypeOpenVRTrackingUniverseOrigin, Offset(mTrackingOrigin, OpenVROverlay), &setProtectedOverlayDirty, &defaultProtectedGetFn,
-      "Tracking origin.");
-
    addProtectedField("controllerDevice", TypeS32, Offset(mControllerDeviceIndex, OpenVROverlay), &setProtectedOverlayDirty, &defaultProtectedGetFn,
       "Index of controller to attach overlay to.");
 
-   addField("manualMouseHandling", TypeBool, Offset(mManualMouseHandling, OpenVROverlay), "Forces openvr to create mouse events for overlay");
+   addProtectedField("highQualityOverlay", TypeBool, Offset(mIsHQOverlay, OpenVROverlay), &setProtectedOverlayTypeDirty, &defaultProtectedGetFn,
+      "Uses the compositor high quality render path. Not available for dashboard overlays.");
 
    Parent::initPersistFields();
 }
@@ -115,22 +136,26 @@ bool OpenVROverlay::onAdd()
 
 void OpenVROverlay::onRemove()
 {
-   if (mOverlayHandle)
+   if (vr::VROverlay())
    {
-      vr::VROverlay()->DestroyOverlay(mOverlayHandle);
-      mOverlayHandle = NULL;
-   }
+      if (mOverlayHandle)
+      {
+         vr::VROverlay()->DestroyOverlay(mOverlayHandle);
+         mOverlayHandle = NULL;
+      }
 
-   if (mThumbOverlayHandle)
-   {
-      vr::VROverlay()->DestroyOverlay(mThumbOverlayHandle);
-      mThumbOverlayHandle = NULL;
+      if (mThumbOverlayHandle)
+      {
+         vr::VROverlay()->DestroyOverlay(mThumbOverlayHandle);
+         mThumbOverlayHandle = NULL;
+      }
    }
 
    if (ManagedSingleton<OpenVRProvider>::instanceOrNull())
    {
       OPENVR->unregisterOverlay(this);
    }
+   Parent::onRemove();
 }
 
 void OpenVROverlay::resetOverlay()
@@ -192,14 +217,10 @@ void OpenVROverlay::updateOverlay()
    OpenVRUtil::convertTransformToOVR(mTransform, vrMat);
    OpenVRUtil::convertMatrixFPlainToSteamVRAffineMatrix(vrMat, ovrMat);
 
-   MatrixF reverseMat = OpenVRUtil::convertSteamVRAffineMatrixToMatrixFPlain(ovrMat);
-   MatrixF finalReverseMat(1);
-   OpenVRUtil::convertTransformFromOVR(reverseMat, finalReverseMat);
-
    switch (mOverlayTransformType)
    {
       case vr::VROverlayTransform_Absolute:
-         overlay->SetOverlayTransformAbsolute(mOverlayHandle, mTrackingOrigin, &ovrMat);
+         overlay->SetOverlayTransformAbsolute(mOverlayHandle, OPENVR->mTrackingSpace, &ovrMat);
          break;
       case vr::VROverlayTransform_TrackedDeviceRelative:
          overlay->SetOverlayTransformTrackedDeviceRelative(mOverlayHandle, mTransformDeviceIndex, &ovrMat);
@@ -212,11 +233,24 @@ void OpenVROverlay::updateOverlay()
          break;
    }
 
-  // overlay->SetOverlayColor(mOverlayHandle, mOverlayColor.red, mOverlayColor.green, mOverlayColor.blue);
    overlay->SetOverlayAlpha(mOverlayHandle, mOverlayColor.alpha);
    overlay->SetOverlayMouseScale(mOverlayHandle, &ovrMouseScale);
    overlay->SetOverlayInputMethod(mOverlayHandle, mInputMethod);
    overlay->SetOverlayWidthInMeters(mOverlayHandle, mOverlayWidth);
+
+#ifdef TORQUE_OPENGL
+   if (GFX->getAdapterType() == OpenGL)
+   {
+      vr::VRTextureBounds_t bounds;
+      bounds.uMin = bounds.vMax = 0.0f; bounds.uMax = bounds.vMin = 1.0f;
+      overlay->SetOverlayTextureBounds(mOverlayHandle, &bounds); // Flip vertically for ogl
+   }
+#endif
+
+   if (mOverlayType == OpenVROverlay::OVERLAYTYPE_OVERLAY && mIsHQOverlay)
+   {
+      overlay->SetHighQualityOverlay(mOverlayHandle);
+   }
 
    // NOTE: if flags in openvr change, double check this
    for (U32 i = vr::VROverlayFlags_None; i <= vr::VROverlayFlags_ShowTouchPadScrollWheel; i++)
@@ -233,7 +267,11 @@ void OpenVROverlay::showOverlay()
    if (mOverlayHandle == NULL)
       return;
 
-   if (mOverlayType != OVERLAYTYPE_DASHBOARD)
+   if (mOverlayType == OVERLAYTYPE_DASHBOARD)
+   {
+      vr::VROverlay()->ShowDashboard(mInternalName);
+   }
+   else
    {
       vr::EVROverlayError err = vr::VROverlay()->ShowOverlay(mOverlayHandle);
       if (err != vr::VROverlayError_None)
@@ -246,16 +284,21 @@ void OpenVROverlay::showOverlay()
    {
       renderFrame(false, false);
    }
+   mTargetDirty = mDynamicTarget = true;
+   setCanvasActive(true);
 }
 
 void OpenVROverlay::hideOverlay()
 {
+   mDynamicTarget = false;
+   setCanvasActive(false);
    if (mOverlayHandle == NULL)
       return;
 
    if (mOverlayType != OVERLAYTYPE_DASHBOARD)
    {
-      vr::VROverlay()->HideOverlay(mOverlayHandle);
+      if (vr::VROverlay())
+         vr::VROverlay()->HideOverlay(mOverlayHandle);
    }
 }
 
@@ -300,7 +343,7 @@ MatrixF OpenVROverlay::getTransformForOverlayCoordinates(const Point2F &pos)
    vec.v[1] = pos.y;
    vr::HmdMatrix34_t outMat;
    MatrixF outTorqueMat;
-   if (vr::VROverlay()->GetTransformForOverlayCoordinates(mOverlayHandle, mTrackingOrigin, vec, &outMat) != vr::VROverlayError_None)
+   if (vr::VROverlay()->GetTransformForOverlayCoordinates(mOverlayHandle, OPENVR->mTrackingSpace, vec, &outMat) != vr::VROverlayError_None)
       return MatrixF::Identity;
 
    MatrixF vrMat(1);
@@ -320,7 +363,7 @@ bool OpenVROverlay::castRay(const Point3F &origin, const Point3F &direction, Ray
    Point3F ovrOrigin = OpenVRUtil::convertPointToOVR(origin);
    Point3F ovrDirection = OpenVRUtil::convertPointToOVR(direction);
 
-   params.eOrigin = mTrackingOrigin;
+   params.eOrigin = OPENVR->mTrackingSpace;
    params.vSource.v[0] = ovrOrigin.x;
    params.vSource.v[1] = ovrOrigin.y;
    params.vSource.v[2] = ovrOrigin.z;
@@ -350,19 +393,6 @@ void OpenVROverlay::moveGamepadFocusToNeighbour()
 
 void OpenVROverlay::handleOpenVREvents()
 {
-   if (mManualMouseHandling)
-   {
-      // tell OpenVR to make some events for us
-      for (vr::TrackedDeviceIndex_t unDeviceId = 1; unDeviceId < vr::k_unControllerStateAxisCount; unDeviceId++)
-      {
-         if (vr::VROverlay()->HandleControllerOverlayInteractionAsMouse(mOverlayHandle, unDeviceId))
-         {
-            break;
-         }
-      }
-   }
-
-
    vr::VREvent_t vrEvent;
    while (vr::VROverlay()->PollNextOverlayEvent(mOverlayHandle, &vrEvent, sizeof(vrEvent)))
    {
@@ -421,7 +451,7 @@ void OpenVROverlay::handleOpenVREvents()
       break;
 
       case vr::VREvent_Quit:
-         AssertFatal(false, "WTF is going on here");
+         AssertFatal(false, "vr::VREvent_Quit event received.");
          break;
 
       case vr::VREvent_KeyboardCharInput:
@@ -477,20 +507,24 @@ void OpenVROverlay::onFrameRendered()
       mStagingTexture.set(desiredSize.x, desiredSize.y, mTargetFormat, &VRTextureProfile, "OpenVROverlay staging texture");
    }
    mTarget->resolveTo(mStagingTexture);
+   mTarget->attachTexture( GFXTextureTarget::RenderSlot(GFXTextureTarget::DepthStencil), NULL );
+   mTarget->attachTexture( GFXTextureTarget::RenderSlot(GFXTextureTarget::Color0), NULL );
 
    vr::Texture_t tex;
+   tex = { NULL, vr::TextureType_Invalid, vr::ColorSpace_Auto };
+#if defined(TORQUE_OS_WIN64) || defined(TORQUE_OS_WIN32) || defined(TORQUE_D3D11)
    if (GFX->getAdapterType() == Direct3D11)
    {
-      tex = { (void*)static_cast<GFXD3D11TextureObject*>(mStagingTexture.getPointer())->getResource(), vr::API_DirectX, vr::ColorSpace_Auto };
-   }
-#ifdef TORQUE_OPENGL
-   else if (GFX->getAdapterType() == OpenGL)
-   {
-      tex = { (void*)static_cast<GFXGLTextureObject*>(mStagingTexture.getPointer())->getHandle(), vr::API_OpenGL, vr::ColorSpace_Auto };
-
+      tex = { (void*)static_cast<GFXD3D11TextureObject*>(mStagingTexture.getPointer())->getResource(), vr::TextureType_DirectX, vr::ColorSpace_Auto };
    }
 #endif
-   else
+#ifdef TORQUE_OPENGL
+   if (GFX->getAdapterType() == OpenGL)
+   {
+      tex = { (void*)(uintptr_t)static_cast<GFXGLTextureObject*>(mStagingTexture.getPointer())->getHandle(), vr::TextureType_OpenGL, vr::ColorSpace_Auto };
+   }
+#endif
+   if (tex.eType == vr::TextureType_Invalid)
    {
       return;
    }
@@ -535,6 +569,20 @@ void OpenVROverlay::setNativeAcceleratorsEnabled(bool enabled)
 {
 }
 
+void OpenVROverlay::setCurveRange(F32 minDist, F32 maxDist)
+{
+   vr::IVROverlay *overlay = vr::VROverlay();
+   if (!overlay || !mOverlayHandle)
+      return;
+
+   if (mOverlayType == OpenVROverlay::OVERLAYTYPE_OVERLAY && mIsHQOverlay &&
+      (mOverlayFlags & vr::VROverlayFlags_Curved))
+   {
+      if (mOverlayHandle == overlay->GetHighQualityOverlay())
+         overlay->SetOverlayAutoCurveDistanceRangeInMeters(mOverlayHandle, minDist, maxDist);
+   }
+}
+
 DefineEngineMethod(OpenVROverlay, showOverlay, void, (), , "")
 {
    object->showOverlay();
@@ -543,4 +591,14 @@ DefineEngineMethod(OpenVROverlay, showOverlay, void, (), , "")
 DefineEngineMethod(OpenVROverlay, hideOverlay, void, (), , "")
 {
    object->hideOverlay();
+}
+
+DefineEngineMethod(OpenVROverlay, isOverlayVisible, bool, (), , "")
+{
+   return object->isOverlayVisible();
+}
+
+DefineEngineMethod(OpenVROverlay, setCurveRange, void, (F32 minDist, F32 maxDist), , "Sets the min/max curve distances for a curved overlay.")
+{
+   object->setCurveRange(minDist, maxDist);
 }

@@ -732,6 +732,24 @@ bool GameConnection::getControlCameraHeadTransform(IDisplayDevice *display, Matr
    return true;
 }
 
+bool GameConnection::getControlVRWorldTransform(MatrixF *transform)
+{
+   GameBase* obj = getCameraObject();
+   if (!obj)
+      return false;
+
+   GameBase* cObj = obj;
+   while ((cObj = cObj->getControlObject()) != 0)
+   {
+      if (cObj->useObjsEyePoint())
+         obj = cObj;
+   }
+
+   obj->getVRCameraTransform(transform);
+
+   return true;
+}
+
 bool GameConnection::getControlCameraEyeTransforms(IDisplayDevice *display, MatrixF *transforms)
 {
    GameBase* obj = getCameraObject();

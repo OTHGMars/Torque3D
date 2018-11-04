@@ -191,6 +191,7 @@ ShapeBaseData::ShapeBaseData()
    debrisDetail( -1 ),
    damageSequence( -1 ),
    hulkSequence( -1 ),
+   eyeHeight(0.0f),
    observeThroughObject( false ),
    firstPersonOnly( false ),
    useEyePoint( false ),
@@ -249,6 +250,7 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    debrisDetail = other.debrisDetail; // -- from shape detail "Debris-17"
    damageSequence = other.damageSequence; // -- from shape sequence "Damage"
    hulkSequence = other.hulkSequence; // -- from shape sequence "Visibility"
+   eyeHeight = other.eyeHeight; // -- from shape eye node
    observeThroughObject = other.observeThroughObject;
    collisionDetails = other.collisionDetails; // -- calc from shape (this is a Vector copy)
    collisionBounds = other.collisionBounds; // -- calc from shape (this is a Vector copy)
@@ -460,6 +462,12 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
 
       debrisDetail = mShape->findDetail("Debris-17");
       eyeNode = mShape->findNode("eye");
+      if (eyeNode != -1)
+      {
+         MatrixF eyeNodeMat;
+         mShape->getNodeWorldTransform(eyeNode, &eyeNodeMat);
+         eyeHeight = eyeNodeMat[11];
+      }
       earNode = mShape->findNode( "ear" );
       if( earNode == -1 )
          earNode = eyeNode;
@@ -2159,7 +2167,7 @@ void ShapeBase::getCameraTransform(F32* pos,MatrixF* mat)
    mat->mul( gCamFXMgr.getTrans() );
 }
 
-void ShapeBase::getEyeCameraTransform(IDisplayDevice *displayDevice, S32 eyeId, MatrixF *outMat)
+void ShapeBase::getEyeCameraTransform(IDisplayDevice* displayDevice, S32 eyeId, MatrixF* outMat)
 {
    MatrixF temp(1);
    Point3F eyePos;
@@ -2168,18 +2176,20 @@ void ShapeBase::getEyeCameraTransform(IDisplayDevice *displayDevice, S32 eyeId, 
    DisplayPose newPose;
    displayDevice->getFrameEyePose(&newPose, eyeId);
 
-   // Ok, basically we just need to add on newPose to the camera transform
-   // NOTE: currently we dont support third-person camera in this mode
-   MatrixF cameraTransform(1);
-   F32 fakePos = 0;
-   //cameraTransform = getRenderTransform(); // use this for controllers TODO
-   getCameraTransform(&fakePos, &cameraTransform);
-
-   temp = MatrixF(1);
+   eyePos = mRenderObjToWorld.getPosition();
+   eyePos.z += mDataBlock->eyeHeight;
    newPose.orientation.setMatrix(&temp);
-   temp.setPosition(newPose.position);
+   temp.setPosition(newPose.position + eyePos);
 
-   *outMat = cameraTransform * temp;
+   *outMat = temp;
+}
+
+void ShapeBase::getVRCameraTransform(MatrixF* mat)
+{
+   Point3F renderPos = mRenderObjToWorld.getPosition();
+   renderPos.z += mDataBlock->eyeHeight;
+   mat->identity();
+   mat->setPosition(renderPos);
 }
 
 void ShapeBase::getCameraParameters(F32 *min,F32* max,Point3F* off,MatrixF* rot)

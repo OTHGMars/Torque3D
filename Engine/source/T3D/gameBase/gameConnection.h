@@ -284,6 +284,9 @@ public:
    /// from the provided IDisplayDevice
    bool getControlCameraHeadTransform(IDisplayDevice *display, MatrixF *transform);
 
+   /// Returns the VR tracking universe to T3D world transform for the control object
+   bool getControlVRWorldTransform(MatrixF *transform);
+
    /// Returns the eye transforms for the control object, using supplemental information 
    /// from the provided IDisplayDevice.
    bool getControlCameraEyeTransforms(IDisplayDevice *display, MatrixF *transforms);
