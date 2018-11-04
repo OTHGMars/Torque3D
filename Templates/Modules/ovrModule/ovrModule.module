@@ -1,0 +1,9 @@
+<ModuleDefinition
+	ModuleId="ovrModule"
+	VersionId="1"
+	Description="OpenVR Input Module."
+	ScriptFile="ovrModule.cs"
+	CreateFunction="create"
+	DestroyFunction="destroy"
+	Group="Game">
+</ModuleDefinition>
