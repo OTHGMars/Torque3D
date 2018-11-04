@@ -51,4 +51,5 @@ function CheetahDAE::onLoad(%this)
    %this.removeNode("TailLightsMesh100");
    %this.removeNode("TailLightsMesh2");
    %this.removeNode("nulldetail1");
+   %this.setNodeTransform("EYE", "0 -1.66418 3.18259 1 0 0 0", "1");
 }
