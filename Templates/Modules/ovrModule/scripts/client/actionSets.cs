@@ -33,8 +33,8 @@ function ovrModule::initActionSets( %this )
    %this.addSkeletalAction("Demo", "lh_anim", 1);
 
    // Both hands start in "with controller" pose
-   ovrModule.setSkeletonMode("Demo", "rh_anim", true);
-   ovrModule.setSkeletonMode("Demo", "lh_anim", true);
+   %this.setSkeletonMode("Demo", "rh_anim", true);
+   %this.setSkeletonMode("Demo", "lh_anim", true);
 
    // Load the menu actions
    %this.addAnalogAction("Menu", "menu_mouse", "in_menu_mouse");

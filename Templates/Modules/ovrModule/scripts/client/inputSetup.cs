@@ -12,6 +12,8 @@ function ovrModule::addActionSet(%this, %setTag, %setName)
    %this.setNames[%setTag] = %setName;
    %this.analogActions[%setTag] = 0;
    %this.digitalActions[%setTag] = 0;
+   %this.poseActions[%setTag] = 0;
+   %this.skeletalActions[%setTag] = 0;
 
    %this.setTag[%this.actionSets] = %setTag;
    %this.actionSets++;
