@@ -135,7 +135,7 @@ ImplementEnumType(OpenVRTrackedControllerRole,
 EndImplementEnumType;
 
 ImplementEnumType(OpenVRActionType,
-   "Types of controller roles.\n\n"
+   "Input action types that can be mapped by IVRInput.\n\n"
    "@ingroup OpenVR")
 { OpenVRActionType_Digital, "Digital" },
 { OpenVRActionType_Analog, "Analog" },
@@ -150,7 +150,6 @@ DefineEngineStaticMethod(OpenVR, isHmdPresent, bool, (), ,
    "ready to take that step yet.\n"
    "@ingroup OpenVR")
 {
-   Con::printf("Point3F: %d, QuatF: %d, TransformF: %d", sizeof(Point3F), sizeof(QuatF), sizeof(TransformF));
    return vr::VR_IsHmdPresent();
 }
 
