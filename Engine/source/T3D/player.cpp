@@ -2697,7 +2697,6 @@ void Player::updateMove(const Move* move)
          QuatF moveRot(emove->rotX[emoveIndex], emove->rotY[emoveIndex], emove->rotZ[emoveIndex], emove->rotW[emoveIndex]);
          MatrixF trans(1);
          moveRot.setMatrix(&trans);
-         trans.inverse();
 
          Point3F vecForward(trans.getForwardVector() * 10.0f);
          Point3F viewVector(vecForward);
@@ -2711,7 +2710,7 @@ void Player::updateMove(const Move* move)
          MathUtils::getAnglesFromVector(vecForward, yawAng, pitchAng);
 
          mRot = EulerF(0);
-         mRot.z = -yawAng;
+         mRot.z = yawAng;
          mHead = EulerF(0);
 
          while (mRot.z < 0.0f)
