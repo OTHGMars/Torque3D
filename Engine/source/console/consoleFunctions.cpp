@@ -42,6 +42,7 @@
 #include "core/color.h"
 #include "math/mPoint3.h"
 #include "math/mathTypes.h"
+#include "math/mRandom.h"
 
 // This is a temporary hack to get tools using the library to
 // link in this module which contains no other references.
@@ -1214,11 +1215,12 @@ ConsoleFunction(addCaseSensitiveStrings,void,2,0,"[string1, string2, ...]"
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( getWord, const char*, ( const char* text, S32 index ),,
+DefineConsoleFunction( getWord, const char*, ( const char* text, S32 index, const char* separators ), ( " \t\n" ),
    "Extract the word at the given @a index in the whitespace-separated list in @a text.\n"
-   "Words in @a text must be separated by newlines, spaces, and/or tabs.\n"
    "@param text A whitespace-separated list of words.\n"
    "@param index The zero-based index of the word to extract.\n"
+   "@param separators Used to define your own 'whitespace'. Default is \" \\t\\n\" "
+   "(newlines, spaces, and/or tabs).\n"
    "@return The word at the given index or \"\" if the index is out of range.\n\n"
    "@tsexample\n"
       "getWord( \"a b c\", 1 ) // Returns \"b\"\n"
@@ -1230,18 +1232,19 @@ DefineConsoleFunction( getWord, const char*, ( const char* text, S32 index ),,
    "@see getRecord\n"
    "@ingroup FieldManip" )
 {
-   return Con::getReturnBuffer( StringUnit::getUnit( text, index, " \t\n") );
+   return Con::getReturnBuffer( StringUnit::getUnit( text, index, separators) );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( getWords, const char*, ( const char* text, S32 startIndex, S32 endIndex ), ( -1 ),
+DefineConsoleFunction( getWords, const char*, ( const char* text, S32 startIndex, S32 endIndex, const char* separators ), ( -1, " \t\n" ),
    "Extract a range of words from the given @a startIndex onwards thru @a endIndex.\n"
-   "Words in @a text must be separated by newlines, spaces, and/or tabs.\n"
    "@param text A whitespace-separated list of words.\n"
    "@param startIndex The zero-based index of the first word to extract from @a text.\n"
    "@param endIndex The zero-based index of the last word to extract from @a text.  If this is -1, all words beginning "
       "with @a startIndex are extracted from @a text.\n"
+   "@param separators Used to define your own 'whitespace'. Default is \" \\t\\n\" "
+   "(newlines, spaces, and/or tabs).\n"
    "@return A string containing the specified range of words from @a text or \"\" if @a startIndex "
       "is out of range or greater than @a endIndex.\n\n"
    "@tsexample\n"
@@ -1257,17 +1260,18 @@ DefineConsoleFunction( getWords, const char*, ( const char* text, S32 startIndex
    if( endIndex < 0 )
       endIndex = 1000000;
 
-   return Con::getReturnBuffer( StringUnit::getUnits( text, startIndex, endIndex, " \t\n" ) );
+   return Con::getReturnBuffer( StringUnit::getUnits( text, startIndex, endIndex, separators) );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( setWord, const char*, ( const char* text, S32 index, const char* replacement ),,
+DefineConsoleFunction( setWord, const char*, ( const char* text, S32 index, const char* replacement, const char* separators ), ( " \t\n" ),
    "Replace the word in @a text at the given @a index with @a replacement.\n"
-   "Words in @a text must be separated by newlines, spaces, and/or tabs.\n"
    "@param text A whitespace-separated list of words.\n"
    "@param index The zero-based index of the word to replace.\n"
    "@param replacement The string with which to replace the word.\n"
+   "@param separators Used to define your own 'whitespace'. Default is \" \\t\\n\" "
+   "(newlines, spaces, and/or tabs).\n"
    "@return A new string with the word at the given @a index replaced by @a replacement or the original "
       "string if @a index is out of range.\n\n"
    "@tsexample\n"
@@ -1279,16 +1283,17 @@ DefineConsoleFunction( setWord, const char*, ( const char* text, S32 index, cons
    "@see setRecord\n"
    "@ingroup FieldManip" )
 {
-   return Con::getReturnBuffer( StringUnit::setUnit( text, index, replacement, " \t\n") );
+   return Con::getReturnBuffer( StringUnit::setUnit( text, index, replacement, separators) );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( removeWord, const char*, ( const char* text, S32 index ),,
+DefineConsoleFunction( removeWord, const char*, ( const char* text, S32 index, const char* separators ), ( " \t\n" ),
    "Remove the word in @a text at the given @a index.\n"
-   "Words in @a text must be separated by newlines, spaces, and/or tabs.\n"
    "@param text A whitespace-separated list of words.\n"
    "@param index The zero-based index of the word in @a text.\n"
+   "@param separators Used to define your own 'whitespace'. Default is \" \\t\\n\" "
+   "(newlines, spaces, and/or tabs).\n"
    "@return A new string with the word at the given index removed or the original string if @a index is "
       "out of range.\n\n"
    "@tsexample\n"
@@ -1299,15 +1304,16 @@ DefineConsoleFunction( removeWord, const char*, ( const char* text, S32 index ),
    "@see removeRecord\n"
    "@ingroup FieldManip" )
 {
-   return Con::getReturnBuffer( StringUnit::removeUnit( text, index, " \t\n" ) );
+   return Con::getReturnBuffer( StringUnit::removeUnit( text, index, separators) );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( getWordCount, S32, ( const char* text ),,
+DefineConsoleFunction( getWordCount, S32, ( const char* text, const char* separators ), ( " \t\n" ),
    "Return the number of whitespace-separated words in @a text.\n"
-   "Words in @a text must be separated by newlines, spaces, and/or tabs.\n"
    "@param text A whitespace-separated list of words.\n"
+   "@param separators Used to define your own 'whitespace'. Default is \" \\t\\n\" "
+   "(newlines, spaces, and/or tabs).\n"
    "@return The number of whitespace-separated words in @a text.\n\n"
    "@tsexample\n"
       "getWordCount( \"a b c d e\" ) // Returns 5\n"
@@ -1317,7 +1323,26 @@ DefineConsoleFunction( getWordCount, S32, ( const char* text ),,
    "@see getRecordCount\n"
    "@ingroup FieldManip" )
 {
-   return StringUnit::getUnitCount( text, " \t\n" );
+   return StringUnit::getUnitCount( text, separators);
+}
+
+//-----------------------------------------------------------------------------
+
+DefineConsoleFunction(getRandomWord, const char*, ( const char* text, const char* separators ), ( " \t\n" ),
+   "Return a randomly selected word from the whitespace-separated list in @a text.\n"
+   "@param text A whitespace-separated list of words.\n"
+   "@param separators Used to define your own 'whitespace'. Default is \" \\t\\n\" "
+   "(newlines, spaces, and/or tabs).\n"
+   "@return A randomly chosen field from @a text or \"\" if @a text is empty.\n\n"
+   "@see getWord\n"
+   "@see getWordCount\n"
+   "@see getField\n"
+   "@see getFieldCount\n"
+   "@ingroup FieldManip")
+{
+   U32 count = StringUnit::getUnitCount(text, separators);
+   S32 index = (count > 1) ? gRandGen.randI(0, count - 1) : 0;
+   return Con::getReturnBuffer(StringUnit::getUnit(text, index, separators));
 }
 
 //-----------------------------------------------------------------------------
@@ -1569,9 +1594,11 @@ DefineConsoleFunction( getRecordCount, S32, ( const char* text ),,
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( firstWord, const char*, ( const char* text ),,
+DefineConsoleFunction( firstWord, const char*, ( const char* text, const char* separators ), ( " \t\n" ),
    "Return the first word in @a text.\n"
-   "@param text A list of words separated by newlines, spaces, and/or tabs.\n"
+   "@param text A whitespace-separated list of words.\n"
+   "@param separators Used to define your own 'whitespace'. Default is \" \\t\\n\" "
+   "(newlines, spaces, and/or tabs).\n"
    "@return The word at index 0 in @a text or \"\" if @a text is empty.\n\n"
    "@note This is equal to \n"
    "@tsexample_nopar\n"
@@ -1580,14 +1607,16 @@ DefineConsoleFunction( firstWord, const char*, ( const char* text ),,
    "@see getWord\n"
    "@ingroup FieldManip" )
 {
-   return Con::getReturnBuffer( StringUnit::getUnit( text, 0, " \t\n" ) );
+   return Con::getReturnBuffer( StringUnit::getUnit( text, 0, separators) );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineConsoleFunction( restWords, const char*, ( const char* text ),,
+DefineConsoleFunction( restWords, const char*, ( const char* text, const char* separators ), ( " \t\n" ),
    "Return all but the first word in @a text.\n"
-   "@param text A list of words separated by newlines, spaces, and/or tabs.\n"
+   "@param text A whitespace-separated list of words.\n"
+   "@param separators Used to define your own 'whitespace'. Default is \" \\t\\n\" "
+   "(newlines, spaces, and/or tabs).\n"
    "@return @a text with the first word removed.\n\n"
    "@note This is equal to \n"
    "@tsexample_nopar\n"
@@ -1596,15 +1625,7 @@ DefineConsoleFunction( restWords, const char*, ( const char* text ),,
    "@see getWords\n"
    "@ingroup FieldManip" )
 {
-   const char* ptr = text;
-   while( *ptr && *ptr != ' ' && *ptr != '\t' && *ptr != '\n' )
-      ptr ++;
-      
-   // Skip separator.
-   if( *ptr )
-      ptr ++;
-      
-   return Con::getReturnBuffer( ptr );
+   return Con::getReturnBuffer(StringUnit::getUnits(text, 1, 10000, separators));
 }
 
 //-----------------------------------------------------------------------------
