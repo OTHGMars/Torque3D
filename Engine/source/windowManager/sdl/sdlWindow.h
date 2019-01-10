@@ -97,7 +97,7 @@ private:
    void _triggerTextNotify(const SDL_Event& event);
 
    /// Modifiers that t3d can accept. The CapsLock, NumLock and Mode keys are not treated as modifiers.
-   static const U32 cTorqueMods = KMOD_CTRL | KMOD_SHIFT | KMOD_ALT | KMOD_GUI;
+   static const U32 cTorqueMods = SI_CTRL | SI_SHIFT | SI_ALT | SI_MAC_OPT;
 
 public:
    PlatformWindowSDL();
