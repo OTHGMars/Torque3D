@@ -133,22 +133,7 @@ function OptionsDlg::setPane(%this, %pane)
 
 function OptionsDlg::onWake(%this)
 {
-   if ( isFunction("getWebDeployment") && getWebDeployment() )
-   {
-      // Cannot enable full screen under web deployment
-      %this-->OptGraphicsFullscreenToggle.setStateOn( false );
-      %this-->OptGraphicsFullscreenToggle.setVisible( false );
-   }
-   else
-   {
-      %this-->OptGraphicsFullscreenToggle.setStateOn( Canvas.isFullScreen() );
-   }
    %this-->OptGraphicsVSyncToggle.setStateOn( !$pref::Video::disableVerticalSync );
-   
-   OptionsDlg.initResMenu();
-   %resSelId = OptionsDlg-->OptGraphicsResolutionMenu.findText( _makePrettyResString( $pref::Video::mode ) );
-   if( %resSelId != -1 )
-      OptionsDlg-->OptGraphicsResolutionMenu.setSelected( %resSelId );
    
    OptGraphicsDriverMenu.clear();
    
@@ -161,7 +146,7 @@ function OptionsDlg::onWake(%this)
 	if ( %selId == -1 )
 		OptGraphicsDriverMenu.setFirstSelected();
    else
-	   OptGraphicsDriverMenu.setSelected( %selId );
+      OptGraphicsDriverMenu.setSelected(%selId, false);
 
    // Setup the graphics quality dropdown menus.
    %this-->OptMeshQualityPopup.init( MeshQualityGroup );
@@ -177,15 +162,29 @@ function OptionsDlg::onWake(%this)
    %ansioCtrl.add( "8X", 8 );
    %ansioCtrl.add( "16X", 16 );
    %ansioCtrl.setSelected( $pref::Video::defaultAnisotropy, false );
-            
-   // set up the Refresh Rate menu.
-   %refreshMenu = %this-->OptRefreshSelectMenu;
-   %refreshMenu.clear();
-   // %refreshMenu.add("Auto", 60);
-   %refreshMenu.add("60", 60);
-   %refreshMenu.add("75", 75);
-   %refreshMenu.setSelected( getWord( $pref::Video::mode, $WORD::REFRESH ) );
-   
+
+   %this.displayDevice = $pref::Video::displayDevice;
+   %this.deviceMode = $pref::Video::deviceMode;
+   %this.RefreshRate = $pref::Video::RefreshRate;
+   %this.Resolution = $pref::Video::Resolution;
+
+   // Fill the Modes menu
+   OptGraphicsModeMenu.clear();
+   for(%i = 0; %i < getWordCount($Video::ModeTags); %i++)
+      OptGraphicsModeMenu.add(getWord($Video::ModeTags, %i), %i);
+
+   // Fill the devices menu
+   %numDevices = Canvas.getMonitorCount();
+   OptGraphicsDeviceMenu.clear();
+   for(%i = 0; %i < %numDevices; %i++)
+   {
+      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
+      OptGraphicsDeviceMenu.add(%device, %i);
+   }
+   if (%numDevices < 2)
+      OptGraphicsDeviceMenu.active = false;
+   OptGraphicsDeviceMenu.setSelected($pref::Video::deviceId, true);
+
    // Audio
    //OptAudioHardwareToggle.setStateOn($pref::SFX::useHardware);
    //OptAudioHardwareToggle.setActive( true );
@@ -260,6 +259,76 @@ function OptGraphicsDriverMenu::onSelect( %this, %id, %text )
 	OptionsDlg._updateApplyState();
 }
 
+function OptGraphicsDeviceMenu::onSelect( %this, %id, %text )
+{
+   OptionsDlg.deviceId = %id;
+   OptGraphicsModeMenu.setSelected(OptionsDlg.deviceMode, true);
+}
+
+function OptGraphicsModeMenu::onSelect( %this, %id, %text )
+{
+   OptionsDlg.deviceMode = %id;
+
+   // Reset the resolution list for the selected mode.
+   OptionsDlg.initResMenu();
+
+   OptionsDlg._updateApplyState();
+}
+
+function OptGraphicsResMenu::onSelect( %this, %id, %text )
+{
+   %resX = getWord(%text, 0);
+   %resY = getWord(%text, 2);
+   OptionsDlg.Resolution = %resX SPC %resY;
+
+   // Update our refresh rates to those available at the selected res
+   %refreshMenu = OptionsDlg-->OptRefreshSelectMenu;
+   %refreshMenu.clear();
+
+   %hasRate = false;
+   %bestRate = 0;
+
+   if (OptionsDlg.deviceMode == 2)
+   {  // List all matching rates for fullscreen
+      %resCount = Canvas.getMonitorModeCount(OptionsDlg.deviceId);
+      for (%i = 0; %i < %resCount; %i++)
+      {
+         %testRes = Canvas.getMonitorMode(OptionsDlg.deviceId, %i);
+         if ((%testRes.x == %resX) && (%testRes.y == %resY))
+         {
+            %rate = getWord( %testRes, $WORD::REFRESH );
+            if ((%rate < 50) || (%refreshMenu.findText(%rate) != -1))
+               continue;
+
+            %refreshMenu.add(%rate, %rate);
+
+            if (OptionsDlg.refreshRate == %rate)
+               %hasRate = true;
+            if (%bestRate < %rate)
+               %bestRate = %rate;
+         }
+      }
+
+      %refreshMenu.sort();
+      %refreshMenu.active = true;
+   }
+   else
+   {  // Windowed modes use the desktop refresh rate
+      %testRes = Canvas.getMonitorDesktopMode(OptionsDlg.deviceId);
+      %rate = getWord( %testRes, $WORD::REFRESH );
+      %refreshMenu.add(%rate, %rate);
+      %bestRate = %rate;
+      %refreshMenu.active = false;
+   }
+
+   if (%hasRate)
+      %refreshMenu.setSelected(OptionsDlg.refreshRate, false);
+   else
+      %refreshMenu.setSelected(%bestRate, false);
+
+	OptionsDlg._updateApplyState();
+}
+
 function _makePrettyResString( %resString )
 {
    %width = getWord( %resString, $WORD::RES_X );
@@ -288,38 +357,48 @@ function _makePrettyResString( %resString )
 function OptionsDlg::initResMenu( %this )
 {
    // Clear out previous values
-   %resMenu = %this-->OptGraphicsResolutionMenu;	   
+   %resMenu = %this-->OptGraphicsResolutionMenu;
    %resMenu.clear();
-   
-   // If we are in a browser then we can't change our resolution through
-   // the options dialog
-   if (getWebDeployment())
-   {
-      %count = 0;
-      %currRes = getWords(Canvas.getVideoMode(), $WORD::RES_X, $WORD::RES_Y);
-      %resMenu.add(%currRes, %count);
-      %count++;
 
-      return;
-   }
-   
+   // Get the device and mode for filtering values
+   %newDeviceID = OptGraphicsDeviceMenu.getSelected();
+   %newDeviceMode = OptGraphicsModeMenu.getSelected();
+
    // Loop through all and add all valid resolutions
    %count = 0;
-   %resCount = Canvas.getModeCount();
+   %resCount = Canvas.getMonitorModeCount(%newDeviceID);
    for (%i = 0; %i < %resCount; %i++)
    {
-      %testResString = Canvas.getMode( %i );
-      %testRes = _makePrettyResString( %testResString );
-                     
+      %testResString = Canvas.getMonitorMode(%newDeviceID, %i);
+
+      // Set a minimum resolution for your game?
+      //if ((%testResString.x < 1024) || (%testResString.y < 720))
+         //continue;
+
+      // Make sure it's valid for the monitor and mode selections
+      if (!Canvas.checkCanvasRes(%testResString, %newDeviceID, %newDeviceMode, false))
+         continue;
+
       // Only add to list if it isn't there already.
+      %testRes = _makePrettyResString( %testResString );
       if (%resMenu.findText(%testRes) == -1)
       {
          %resMenu.add(%testRes, %i);
          %count++;
+
+         if ((%testResString.x == %this.resolution.x) && (%testResString.y == %this.resolution.y))
+            %currentRes = %i;
+         if (%bestRes $= "")
+            %bestRes = %i;
       }
    }
    
+   %resMenu.setActive(%count > 1);
    %resMenu.sort();
+   if ((%currentRes !$= "") && (%currentRes > -1))
+      %resMenu.setSelected(%currentRes);
+   else
+      %resMenu.setSelected(%bestRes);
 }
 
 function OptionsDlg::applyGraphics( %this, %testNeedApply )
@@ -347,64 +426,40 @@ function OptionsDlg::applyGraphics( %this, %testNeedApply )
    }
 
    // Gather the new video mode.
-   if ( isFunction("getWebDeployment") && getWebDeployment() )
-   {
-      // Under web deployment, we use the custom resolution rather than a Canvas
-      // defined one.
-      %newRes = %this-->OptGraphicsResolutionMenu.getText();
-   }
-   else
-   {
-	   %newRes = getWords( Canvas.getMode( %this-->OptGraphicsResolutionMenu.getSelected() ), $WORD::RES_X, $WORD::RES_Y ); 
-   }
+   %newDeviceID = OptGraphicsDeviceMenu.getSelected();
+   %newDeviceMode = OptGraphicsModeMenu.getSelected();
+   %newRes = getWords(Canvas.getMonitorMode(%newDeviceID, OptGraphicsResMenu.getSelected()), $WORD::RES_X, $WORD::RES_Y ); 
 	%newBpp        = 32; // ... its not 1997 anymore.
-	%newFullScreen = %this-->OptGraphicsFullscreenToggle.getValue() ? "true" : "false";
+	%newFullScreen = (%newDeviceMode == 2) ? "true" : "false";
 	%newRefresh    = %this-->OptRefreshSelectMenu.getSelected();
 	%newVsync = !%this-->OptGraphicsVSyncToggle.getValue();	
 	%newFSAA = %this-->OptAAQualityPopup.getSelected();
-
-   // Under web deployment we can't be full screen.
-   if ( isFunction("getWebDeployment") && getWebDeployment() )
-   {
-      %newFullScreen = false;
-   }
-   else if ( %newFullScreen $= "false" )
-	{
-      // If we're in windowed mode switch the fullscreen check
-      // if the resolution is bigger than the desktop.
-      %deskRes    = getDesktopResolution();      
-      %deskResX   = getWord(%deskRes, $WORD::RES_X);
-      %deskResY   = getWord(%deskRes, $WORD::RES_Y);
-	   if (  getWord( %newRes, $WORD::RES_X ) > %deskResX || 
-	         getWord( %newRes, $WORD::RES_Y ) > %deskResY )
-      {
-         %newFullScreen = "true";
-         %this-->OptGraphicsFullscreenToggle.setStateOn( true );
-      }
-	}
 
    // Build the final mode string.
 	%newMode = %newRes SPC %newFullScreen SPC %newBpp SPC %newRefresh SPC %newFSAA;
 	
    // Change the video mode.   
-   if (  %newMode !$= $pref::Video::mode || 
-         %newVsync != $pref::Video::disableVerticalSync )
+   if (  %newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
+         %newVsync != $pref::Video::disableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
    {
       if ( %testNeedApply )
          return true;
 
       $pref::Video::mode = %newMode;
-      $pref::Video::disableVerticalSync = %newVsync;      
+      $pref::Video::disableVerticalSync = %newVsync;
+      $pref::Video::deviceId = %newDeviceID;
+      $pref::Video::deviceMode = %newDeviceMode;
+      $pref::Video::Resolution = %newRes;
       configureCanvas();
    }
    
    // Test and apply the graphics settings.
-   if ( %this-->OptMeshQualityPopup.apply( MeshQualityGroup, %testNeedApply ) ) return true;            
-   if ( %this-->OptTextureQualityPopup.apply( TextureQualityGroup, %testNeedApply ) ) return true;            
-   if ( %this-->OptLightingQualityPopup.apply( LightingQualityGroup, %testNeedApply ) ) return true;            
-   if ( %this-->OptShaderQualityPopup.apply( ShaderQualityGroup, %testNeedApply ) ) return true;   
+   if ( %this-->OptMeshQualityPopup.apply( MeshQualityGroup, %testNeedApply ) ) return true;
+   if ( %this-->OptTextureQualityPopup.apply( TextureQualityGroup, %testNeedApply ) ) return true;
+   if ( %this-->OptLightingQualityPopup.apply( LightingQualityGroup, %testNeedApply ) ) return true;
+   if ( %this-->OptShaderQualityPopup.apply( ShaderQualityGroup, %testNeedApply ) ) return true;
 
-   // Check the anisotropic filtering.   
+   // Check the anisotropic filtering.
    %level = %this-->OptAnisotropicPopup.getSelected();
    if ( %level != $pref::Video::defaultAnisotropy )
    {

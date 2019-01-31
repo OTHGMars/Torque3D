@@ -15,14 +15,8 @@ function GraphicsMenu::refresh(%this)
 {
    //
    // Display Menu
-   GraphicsMenuFullScreen.setStateOn( Canvas.isFullScreen() );
    GraphicsMenuVSync.setStateOn( !$pref::Video::disableVerticalSync );
-   
-   %this.initResMenu();
-   %resSelId = GraphicsMenuResolution.findText( _makePrettyResString( $pref::Video::mode ) );
-   if( %resSelId != -1 )
-      GraphicsMenuResolution.setSelected( %resSelId );
-   
+
    GraphicsMenuDriver.clear();
    
    %buffer = getDisplayDeviceList();
@@ -34,8 +28,29 @@ function GraphicsMenu::refresh(%this)
 	if ( %selId == -1 )
 		GraphicsMenuDriver.setFirstSelected();
    else
-	   GraphicsMenuDriver.setSelected( %selId );
-   //
+	   GraphicsMenuDriver.setSelected( %selId, false );
+
+   %this.displayDevice = $pref::Video::displayDevice;
+   %this.deviceMode = $pref::Video::deviceMode;
+   %this.RefreshRate = $pref::Video::RefreshRate;
+   %this.Resolution = $pref::Video::Resolution;
+
+   // Fill the Modes menu
+   GraphicsMenuDisplayMode.clear();
+   for(%i = 0; %i < getWordCount($Video::ModeTags); %i++)
+      GraphicsMenuDisplayMode.add(getWord($Video::ModeTags, %i), %i);
+
+   // Fill the devices menu
+   %numDevices = Canvas.getMonitorCount();
+   GraphicsMenuDeviceID.clear();
+   for(%i = 0; %i < %numDevices; %i++)
+   {
+      %device = (%i+1) @ " - " @ Canvas.getMonitorName(%i);
+      GraphicsMenuDeviceID.add(%device, %i);
+   }
+   if (%numDevices < 2)
+      GraphicsMenuDeviceID.active = false;
+   GraphicsMenuDeviceID.setSelected($pref::Video::deviceId, true);
 
    //
    // General Graphics menu
@@ -59,14 +74,6 @@ function GraphicsMenu::refresh(%this)
    %ansioCtrl.add( "Off", 0 );
    %ansioCtrl.setSelected( $pref::Video::defaultAnisotropy, false );
             
-   // set up the Refresh Rate menu.
-   %refreshMenu = GraphicsMenuRefreshRate;
-   %refreshMenu.clear();
-   // %refreshMenu.add("Auto", 60);
-   %refreshMenu.add("60", 60);
-   %refreshMenu.add("75", 75);
-   %refreshMenu.setSelected( $pref::Video::RefreshRate );
-	   
    // Populate the Anti-aliasing popup.
    %aaMenu = GraphicsMenuAA;
    %aaMenu.clear();
@@ -103,36 +110,46 @@ function GraphicsMenu::initResMenu( %this )
    // Clear out previous values
    %resMenu = GraphicsMenuResolution;	   
    %resMenu.clear();
-   
-   // If we are in a browser then we can't change our resolution through
-   // the options dialog
-   if (getWebDeployment())
-   {
-      %count = 0;
-      %currRes = getWords(Canvas.getVideoMode(), $WORD::RES_X, $WORD::RES_Y);
-      %resMenu.add(%currRes, %count);
-      %count++;
 
-      return;
-   }
-   
+   // Get the device and mode for filtering values
+   %newDeviceID = GraphicsMenuDeviceID.getSelected();
+   %newDeviceMode = GraphicsMenuDisplayMode.getSelected();
+
    // Loop through all and add all valid resolutions
    %count = 0;
-   %resCount = Canvas.getModeCount();
+   %resCount = Canvas.getMonitorModeCount(%newDeviceID);
    for (%i = 0; %i < %resCount; %i++)
    {
-      %testResString = Canvas.getMode( %i );
-      %testRes = _makePrettyResString( %testResString );
-                     
+      %testResString = Canvas.getMonitorMode(%newDeviceID, %i);
+
+      // Set a minimum resolution for your game?
+      //if ((%testResString.x < 1024) || (%testResString.y < 720))
+         //continue;
+
+      // Make sure it's valid for the monitor and mode selections
+      if (!Canvas.checkCanvasRes(%testResString, %newDeviceID, %newDeviceMode, false))
+         continue;
+
       // Only add to list if it isn't there already.
+      %testRes = _makePrettyResString( %testResString );
       if (%resMenu.findText(%testRes) == -1)
       {
          %resMenu.add(%testRes, %i);
          %count++;
+
+         if ((%testResString.x == %this.resolution.x) && (%testResString.y == %this.resolution.y))
+            %currentRes = %i;
+         if (%bestRes $= "")
+            %bestRes = %i;
       }
    }
-   
+
+   %resMenu.setActive(%count > 1);
    %resMenu.sort();
+   if ((%currentRes !$= "") && (%currentRes > -1))
+      %resMenu.setSelected(%currentRes);
+   else
+      %resMenu.setSelected(%bestRes);
 }
 
 function GraphicsQualityPopup::init( %this, %qualityGroup )
@@ -514,40 +531,26 @@ function GraphicsMenu::apply(%this)
    $pref::Water::disableTrueReflections = !GraphicsMenuWaterRefl.isStateOn();
    
    //Update the display settings now
-   $pref::Video::Resolution = getWords( Canvas.getMode( GraphicsMenuResolution.getSelected() ), $WORD::RES_X, $WORD::RES_Y );
+   %newDeviceID = GraphicsMenuDeviceID.getSelected();
+   %newDeviceMode = GraphicsMenuDisplayMode.getSelected();
+   $pref::Video::Resolution = getWords(Canvas.getMonitorMode(%newDeviceID, GraphicsMenuResolution.getSelected()), $WORD::RES_X, $WORD::RES_Y ); 
+	$pref::Video::FullScreen = (%newDeviceMode == 2) ? "true" : "false";
    %newBpp        = 32; // ... its not 1997 anymore.
-	$pref::Video::FullScreen = GraphicsMenuFullScreen.isStateOn() ? "true" : "false";
 	$pref::Video::RefreshRate    = GraphicsMenuRefreshRate.getSelected();
 	$pref::Video::disableVerticalSync = !GraphicsMenuVSync.isStateOn();	
 	$pref::Video::AA = GraphicsMenuAA.getSelected();
 	
-   if ( %newFullScreen $= "false" )
-	{
-      // If we're in windowed mode switch the fullscreen check
-      // if the resolution is bigger than the desktop.
-      %deskRes    = getDesktopResolution();      
-      %deskResX   = getWord(%deskRes, $WORD::RES_X);
-      %deskResY   = getWord(%deskRes, $WORD::RES_Y);
-	   if (  getWord( %newRes, $WORD::RES_X ) > %deskResX || 
-	         getWord( %newRes, $WORD::RES_Y ) > %deskResY )
-      {
-         $pref::Video::FullScreen = "true";
-         GraphicsMenuFullScreen.setStateOn( true );
-      }
-	}
-
    // Build the final mode string.
 	%newMode = $pref::Video::Resolution SPC $pref::Video::FullScreen SPC %newBpp SPC $pref::Video::RefreshRate SPC $pref::Video::AA;
 	
    // Change the video mode.   
-   if (  %newMode !$= $pref::Video::mode || 
-         %newVsync != $pref::Video::disableVerticalSync )
+   if (%newMode !$= $pref::Video::mode || %newDeviceID != $pref::Video::deviceId ||
+       %newVsync != $pref::Video::disableVerticalSync || %newDeviceMode != $pref::Video::deviceMode)
    {
-      if ( %testNeedApply )
-         return true;
-
       $pref::Video::mode = %newMode;
       $pref::Video::disableVerticalSync = %newVsync;      
+      $pref::Video::deviceId = %newDeviceID;
+      $pref::Video::deviceMode = %newDeviceMode;
       configureCanvas();
    }
    
@@ -564,4 +567,70 @@ function GraphicsMenu::apply(%this)
    echo("Exporting client prefs");
    %prefPath = getPrefpath();
    export("$pref::*", %prefPath @ "/clientPrefs.cs", false);
+}
+
+function GraphicsMenuDeviceID::onSelect( %this, %id, %text )
+{
+   GraphicsMenu.deviceId = %id;
+   GraphicsMenuDisplayMode.setSelected(GraphicsMenu.deviceMode, true);
+}
+
+function GraphicsMenuDisplayMode::onSelect( %this, %id, %text )
+{
+   GraphicsMenu.deviceMode = %id;
+
+   // Reset the resolution list for the selected mode.
+   GraphicsMenu.initResMenu();
+}
+
+function GraphicsMenuResolution::onSelect( %this, %id, %text )
+{
+   %resX = getWord(%text, 0);
+   %resY = getWord(%text, 2);
+   GraphicsMenu.Resolution = %resX SPC %resY;
+
+   // Update our refresh rates to those available at the selected res
+   %refreshMenu = GraphicsMenuRefreshRate;
+   %refreshMenu.clear();
+
+   %hasRate = false;
+   %bestRate = 0;
+
+   if (GraphicsMenu.deviceMode == 2)
+   {  // List all matching rates for fullscreen
+      %resCount = Canvas.getMonitorModeCount(GraphicsMenu.deviceId);
+      for (%i = 0; %i < %resCount; %i++)
+      {
+         %testRes = Canvas.getMonitorMode(GraphicsMenu.deviceId, %i);
+         if ((%testRes.x == %resX) && (%testRes.y == %resY))
+         {
+            %rate = getWord( %testRes, $WORD::REFRESH );
+            if ((%rate < 50) || (%refreshMenu.findText(%rate) != -1))
+               continue;
+
+            %refreshMenu.add(%rate, %rate);
+
+            if (GraphicsMenu.refreshRate == %rate)
+               %hasRate = true;
+            if (%bestRate < %rate)
+               %bestRate = %rate;
+         }
+      }
+
+      %refreshMenu.sort();
+      %refreshMenu.active = true;
+   }
+   else
+   {  // Windowed modes use the desktop refresh rate
+      %testRes = Canvas.getMonitorDesktopMode(GraphicsMenu.deviceId);
+      %rate = getWord( %testRes, $WORD::REFRESH );
+      %refreshMenu.add(%rate, %rate);
+      %bestRate = %rate;
+      %refreshMenu.active = false;
+   }
+
+   if (%hasRate)
+      %refreshMenu.setSelected(GraphicsMenu.refreshRate, false);
+   else
+      %refreshMenu.setSelected(%bestRate, false);
 }

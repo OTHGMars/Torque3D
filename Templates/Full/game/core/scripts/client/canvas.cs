@@ -25,95 +25,61 @@
 // Constructs and initializes the default canvas window.
 //---------------------------------------------------------------------------------------------
 $canvasCreated = false;
+$Video::ModeTags = "Windowed Borderless Fullscreen";
 
 function configureCanvas()
 {
-   // Setup a good default if we don't have one already.
-   if ($pref::Video::mode $= "")
-      $pref::Video::mode = "800 600 false 32 60 0";
+   if (($pref::Video::deviceId $= "") ||
+         ($pref::Video::deviceId >= Canvas.getMonitorCount()))
+      $pref::Video::deviceId = 0;  // Monitor 0
 
-   %resX = getWord($pref::Video::mode, $WORD::RES_X);
-   %resY = getWord($pref::Video::mode, $WORD::RES_Y);
-   %fs = getWord($pref::Video::mode,   $WORD::FULLSCREEN);
-   %bpp = getWord($pref::Video::mode,  $WORD::BITDEPTH);
-   %rate = getWord($pref::Video::mode, $WORD::REFRESH);
-   %fsaa = getWord($pref::Video::mode, $WORD::AA);
-   
-   if($cliFullscreen !$= "") {
-      %fs = $cliFullscreen;
-      $cliFullscreen = "";
-   }
-   
-   echo("--------------");
-   echo("Attempting to set resolution to \"" @ %resX SPC %resY SPC %fs SPC %bpp SPC %rate SPC %fsaa @ "\"");
-      
-   %deskRes    = getDesktopResolution();      
-   %deskResX   = getWord(%deskRes, $WORD::RES_X);
-   %deskResY   = getWord(%deskRes, $WORD::RES_Y);
-   %deskResBPP = getWord(%deskRes, 2);
-   
-   // We shouldn't be getting this any more but just in case...
-   if (%bpp $= "Default")
-      %bpp = %deskResBPP;
-      
-   // Make sure we are running at a valid resolution
-   if (%fs $= "0" || %fs $= "false")
+   if ($pref::Video::deviceMode $= "")
+      $pref::Video::deviceMode = 1; // Borderless
+
+   // Default to borderless at desktop resolution if there is no saved pref
+   if ($pref::Video::Resolution $= "")
    {
-      // Windowed mode has to use the same bit depth as the desktop
-      %bpp = %deskResBPP;
-      
-      // Windowed mode also has to run at a smaller resolution than the desktop
-      if ((%resX >= %deskResX) || (%resY >= %deskResY))
-      {
-         warn("Warning: The requested windowed resolution is equal to or larger than the current desktop resolution. Attempting to find a better resolution");
-      
-         %resCount = Canvas.getModeCount();
-         for (%i = (%resCount - 1); %i >= 0; %i--)
-         {
-            %testRes = Canvas.getMode(%i);
-            %testResX = getWord(%testRes, $WORD::RES_X);
-            %testResY = getWord(%testRes, $WORD::RES_Y);
-            %testBPP  = getWord(%testRes, $WORD::BITDEPTH);
-
-            if (%testBPP != %bpp)
-               continue;
-            
-            if ((%testResX < %deskResX) && (%testResY < %deskResY))
-            {
-               // This will work as our new resolution
-               %resX = %testResX;
-               %resY = %testResY;
-               
-               warn("Warning: Switching to \"" @ %resX SPC %resY SPC %bpp @ "\"");
-               
-               break;
-            }
-         }
-      }
+      $pref::Video::mode = Canvas.getBestCanvasRes($pref::Video::deviceId, $pref::Video::deviceMode);
+      Canvas.modeStrToPrefs($pref::Video::mode);
    }
-      
-   $pref::Video::mode = %resX SPC %resY SPC %fs SPC %bpp SPC %rate SPC %fsaa;
-   
-   if (%fs == 1 || %fs $= "true")
-      %fsLabel = "Yes";
-   else
-      %fsLabel = "No";
+
+   if ($pref::Video::deviceMode < 2)
+      $pref::Video::FullScreen = false;
+   %modeStr = Canvas.prefsToModeStr();
+
+   echo("--------------");
+   echo("Attempting to set resolution to \"" @ %modeStr @ "\"");
+
+   // Make sure we are running at a valid resolution
+   if (!Canvas.checkCanvasRes(%modeStr, $pref::Video::deviceId, $pref::Video::deviceMode, true))
+   {
+      %modeStr = Canvas.getBestCanvasRes($pref::Video::deviceId, $pref::Video::deviceMode);
+      Canvas.modeStrToPrefs(%modeStr);
+   }
+
+   %fsLabel = getWord($Video::ModeTags, $pref::Video::deviceMode);
+   %resX = $pref::Video::Resolution.x;
+   %resY = $pref::Video::Resolution.y;
+   %bpp  = $pref::Video::BitDepth;
+   %rate = $pref::Video::RefreshRate;
+   %fsaa = $pref::Video::AA;
+   %fs = ($pref::Video::deviceMode == 2);
 
    echo("Accepted Mode: " NL
-      "--Resolution : " @  %resX SPC %resY NL 
-      "--Full Screen : " @ %fsLabel NL
+      "--Resolution     : " @  %resX SPC %resY NL
+      "--Screen Mode    : " @ %fsLabel NL
       "--Bits Per Pixel : " @ %bpp NL
-      "--Refresh Rate : " @ %rate NL
-      "--FSAA Level : " @ %fsaa NL
+      "--Refresh Rate   : " @ %rate NL
+      "--FSAA Level     : " @ %fsaa NL
       "--------------");
 
    // Actually set the new video mode
    Canvas.setVideoMode(%resX, %resY, %fs, %bpp, %rate, %fsaa);
-   
+
    // FXAA piggybacks on the FSAA setting in $pref::Video::mode.
    if ( isObject( FXAA_PostEffect ) )
       FXAA_PostEffect.isEnabled = ( %fsaa > 0 ) ? true : false;
-      
+
    //if ( $pref::Video::autoDetect )
    //   GraphicsQualityAutodetect();
 }
@@ -190,4 +156,94 @@ function EditorIsActive()
 function GuiEditorIsActive()
 {
    return ( isObject(GuiEditorGui) && Canvas.getContent() == GuiEditorGui.getId() );
+}
+
+function GuiCanvas::modeStrToPrefs(%this, %modeStr)
+{
+   $pref::Video::Resolution = %modeStr.x SPC %modeStr.y;
+   $pref::Video::FullScreen = getWord(%modeStr, $WORD::FULLSCREEN);
+   $pref::Video::BitDepth = getWord(%modeStr, $WORD::BITDEPTH);
+   $pref::Video::RefreshRate = getWord(%modeStr, $WORD::REFRESH);
+   $pref::Video::AA = getWord(%modeStr, $WORD::AA);
+}
+
+function GuiCanvas::prefsToModeStr(%this)
+{
+   %modeStr = $pref::Video::Resolution SPC $pref::Video::FullScreen SPC
+      $pref::Video::BitDepth SPC $pref::Video::RefreshRate SPC $pref::Video::AA;
+
+   return %modeStr;
+}
+
+function GuiCanvas::checkCanvasRes(%this, %mode, %deviceId, %deviceMode, %startup)
+{
+   %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
+   %resX = getWord(%mode, $WORD::RES_X);
+   %resY = getWord(%mode, $WORD::RES_Y);
+
+   if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y))
+      return false;  // Bigger than monitor is bad
+
+   if (%deviceMode == 0)
+   {  // Windowed must be smaller than the device for title bar and border
+      if ((%resY > (%deviceRect.y - 60)) || (%resX > (%deviceRect.x - 2)))
+         return false;
+      return true;
+   }
+   else if (%deviceMode == 1)
+   {  // Borderless must be at the device res
+      if ((%resX != %deviceRect.x) || (%resY != %deviceRect.y))
+         return false;
+
+      return true;
+   }
+
+   if (!%startup)
+      return true;
+
+   // Checking saved prefs, make sure the mode still exists
+   %bpp = getWord(%mode, $WORD::BITDEPTH);
+   %rate = getWord(%mode, $WORD::REFRESH);
+
+   %resCount = %this.getMonitorModeCount(%deviceId);
+   for (%i = (%resCount - 1); %i >= 0; %i--)
+   {
+      %testRes = %this.getMonitorMode(%deviceId, %i);
+      %testResX = getWord(%testRes, $WORD::RES_X);
+      %testResY = getWord(%testRes, $WORD::RES_Y);
+      %testBPP  = getWord(%testRes, $WORD::BITDEPTH);
+      %testRate = getWord(%testRes, $WORD::REFRESH);
+
+      if ((%testResX == %resX) && (%testResY == %resY) &&
+            (%testBPP == %bpp) && (%testRate == %rate))
+         return true;
+   }
+
+   return false;
+}
+
+// Find the best video mode setting for the device and display mode
+function GuiCanvas::getBestCanvasRes(%this, %deviceId, %deviceMode)
+{
+   %deviceRect = getWords(%this.getMonitorRect(%deviceId), 2);
+
+   %resCount = %this.getMonitorModeCount(%deviceId);
+   for (%i = 0; %i < %resCount; %i++)
+   {
+      %testRes = %this.getMonitorMode(%deviceId, %i);
+      %resX = getWord(%testRes, $WORD::RES_X);
+      %resY = getWord(%testRes, $WORD::RES_Y);
+
+      if ((%resX > %deviceRect.x) || (%resY > %deviceRect.y))
+         continue;
+      else if ((%deviceMode == 0) && (%resY == %deviceRect.y))
+         continue;
+      else if ((%deviceMode == 1) && ((%resX != %deviceRect.x) || (%resY != %deviceRect.y)))
+         continue;  // Borderless must be at the device res
+
+      return %testRes;
+   }
+
+   // Nothing found? return first mode
+   return %this.getMonitorMode(%deviceId, 0);
 }

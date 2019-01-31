@@ -550,6 +550,138 @@
                   canSaveDynamicFields = "0";
 
                   new GuiTextCtrl() {
+                     text = "Display Device";
+                     maxLength = "1024";
+                     margin = "0 0 0 0";
+                     padding = "0 0 0 0";
+                     anchorTop = "1";
+                     anchorBottom = "0";
+                     anchorLeft = "1";
+                     anchorRight = "0";
+                     position = "0 0";
+                     extent = "175 20";
+                     minExtent = "8 2";
+                     horizSizing = "right";
+                     vertSizing = "bottom";
+                     profile = "GuiMenuTextProfile";
+                     visible = "1";
+                     active = "1";
+                     tooltipProfile = "GuiToolTipProfile";
+                     hovertime = "1000";
+                     isContainer = "1";
+                     canSave = "1";
+                     canSaveDynamicFields = "0";
+                  };
+                  new GuiPopUpMenuCtrl(GraphicsMenuDeviceID) {
+                     maxPopupHeight = "200";
+                     sbUsesNAColor = "0";
+                     reverseTextList = "0";
+                     bitmapBounds = "16 16";
+                     text = "";
+                     maxLength = "1024";
+                     margin = "0 0 0 0";
+                     padding = "0 0 0 0";
+                     anchorTop = "1";
+                     anchorBottom = "0";
+                     anchorLeft = "1";
+                     anchorRight = "0";
+                     position = "175 0";
+                     extent = "175 20";
+                     minExtent = "8 2";
+                     horizSizing = "right";
+                     vertSizing = "bottom";
+                     profile = "GuiPopUpMenuProfile";
+                     visible = "1";
+                     active = "1";
+                     tooltipProfile = "GuiToolTipProfile";
+                     hovertime = "1000";
+                     isContainer = "1";
+                     canSave = "1";
+                     canSaveDynamicFields = "0";
+                  };
+               };
+               new GuiControl() {
+                  position = "0 40";
+                  extent = "350 20";
+                  minExtent = "8 2";
+                  horizSizing = "right";
+                  vertSizing = "bottom";
+                  profile = "GuiDefaultProfile";
+                  visible = "1";
+                  active = "1";
+                  tooltipProfile = "GuiToolTipProfile";
+                  hovertime = "1000";
+                  isContainer = "1";
+                  canSave = "1";
+                  canSaveDynamicFields = "0";
+
+                  new GuiTextCtrl() {
+                     text = "Display Mode";
+                     maxLength = "1024";
+                     margin = "0 0 0 0";
+                     padding = "0 0 0 0";
+                     anchorTop = "1";
+                     anchorBottom = "0";
+                     anchorLeft = "1";
+                     anchorRight = "0";
+                     position = "0 0";
+                     extent = "175 20";
+                     minExtent = "8 2";
+                     horizSizing = "right";
+                     vertSizing = "bottom";
+                     profile = "GuiMenuTextProfile";
+                     visible = "1";
+                     active = "1";
+                     tooltipProfile = "GuiToolTipProfile";
+                     hovertime = "1000";
+                     isContainer = "1";
+                     canSave = "1";
+                     canSaveDynamicFields = "0";
+                  };
+                  new GuiPopUpMenuCtrl(GraphicsMenuDisplayMode) {
+                     maxPopupHeight = "200";
+                     sbUsesNAColor = "0";
+                     reverseTextList = "0";
+                     bitmapBounds = "16 16";
+                     text = "1280 x 720  (16:9)";
+                     maxLength = "1024";
+                     margin = "0 0 0 0";
+                     padding = "0 0 0 0";
+                     anchorTop = "1";
+                     anchorBottom = "0";
+                     anchorLeft = "1";
+                     anchorRight = "0";
+                     position = "175 0";
+                     extent = "175 20";
+                     minExtent = "8 2";
+                     horizSizing = "right";
+                     vertSizing = "bottom";
+                     profile = "GuiPopUpMenuProfile";
+                     visible = "1";
+                     active = "1";
+                     tooltipProfile = "GuiToolTipProfile";
+                     hovertime = "1000";
+                     isContainer = "1";
+                     canSave = "1";
+                     canSaveDynamicFields = "0";
+                  };
+               };
+               new GuiControl() {
+                  position = "0 60";
+                  extent = "350 20";
+                  minExtent = "8 2";
+                  horizSizing = "right";
+                  vertSizing = "bottom";
+                  profile = "GuiDefaultProfile";
+                  visible = "1";
+                  active = "1";
+                  tooltipProfile = "GuiToolTipProfile";
+                  hovertime = "1000";
+                  isContainer = "1";
+                  canSave = "1";
+                  canSaveDynamicFields = "0";
+
+                  new GuiTextCtrl() {
                      text = "Resolution";
                      maxLength = "1024";
                      margin = "0 0 0 0";
@@ -601,65 +733,7 @@
                   };
                };
                new GuiControl() {
-                  position = "0 40";
-                  extent = "350 20";
-                  minExtent = "8 2";
-                  horizSizing = "right";
-                  vertSizing = "bottom";
-                  profile = "GuiDefaultProfile";
-                  visible = "1";
-                  active = "1";
-                  tooltipProfile = "GuiToolTipProfile";
-                  hovertime = "1000";
-                  isContainer = "1";
-                  canSave = "1";
-                  canSaveDynamicFields = "0";
-
-                  new GuiTextCtrl() {
-                     text = "Full Screen";
-                     maxLength = "1024";
-                     margin = "0 0 0 0";
-                     padding = "0 0 0 0";
-                     anchorTop = "1";
-                     anchorBottom = "0";
-                     anchorLeft = "1";
-                     anchorRight = "0";
-                     position = "0 0";
-                     extent = "175 20";
-                     minExtent = "8 2";
-                     horizSizing = "right";
-                     vertSizing = "bottom";
-                     profile = "GuiMenuTextProfile";
-                     visible = "1";
-                     active = "1";
-                     tooltipProfile = "GuiToolTipProfile";
-                     hovertime = "1000";
-                     isContainer = "1";
-                     canSave = "1";
-                     canSaveDynamicFields = "0";
-                  };
-                  new GuiCheckBoxCtrl(GraphicsMenuFullScreen) {
-                     text = "Button";
-                     groupNum = "-1";
-                     buttonType = "ToggleButton";
-                     useMouseEvents = "0";
-                     position = "250 0";
-                     extent = "20 20";
-                     minExtent = "8 2";
-                     horizSizing = "right";
-                     vertSizing = "bottom";
-                     profile = "GuiCheckBoxProfile";
-                     visible = "1";
-                     active = "1";
-                     tooltipProfile = "GuiToolTipProfile";
-                     hovertime = "1000";
-                     isContainer = "0";
-                     canSave = "1";
-                     canSaveDynamicFields = "0";
-                  };
-               };
-               new GuiControl() {
-                  position = "0 60";
+                  position = "0 80";
                   extent = "350 20";
                   minExtent = "8 2";
                   horizSizing = "right";
@@ -725,7 +799,7 @@
                   };
                };
                new GuiControl() {
-                  position = "0 80";
+                  position = "0 100";
                   extent = "350 20";
                   minExtent = "8 2";
                   horizSizing = "right";
@@ -783,7 +857,7 @@
                   };
                };
                new GuiControl() {
-                  position = "0 120";
+                  position = "0 140";
                   extent = "450 20";
                   minExtent = "8 2";
                   horizSizing = "right";
@@ -866,7 +940,7 @@
                   };
                };
                new GuiControl() {
-                  position = "0 180";
+                  position = "0 200";
                   extent = "450 20";
                   minExtent = "8 2";
                   horizSizing = "right";
@@ -925,7 +999,7 @@
                   };
                };
                new GuiControl() {
-                  position = "0 200";
+                  position = "0 220";
                   extent = "450 20";
                   minExtent = "8 2";
                   horizSizing = "right";
