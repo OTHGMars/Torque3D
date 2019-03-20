@@ -4,7 +4,7 @@ Download and extract the CEF 'Standard Distribution' for your target platform fr
 
 Clone [Torque3D](https://github.com/GarageGames/Torque3D).
 
-Pull https://github.com/OTHGMars/Torque3D/tree/CEFDev into your local branch.
+Pull https://github.com/OTHGMars/Torque3D/tree/CEFPlugin into your local branch.
 
 ## Windows:
 1. Build the cef wrapper binary. (This step is only needed to build the dll wrapper. All other required binaries are provided in the distribution).
