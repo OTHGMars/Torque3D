@@ -1,0 +1,49 @@
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="keyDemo.css" />
+  </head> 
+  <body style = "background-color:#0000b3bb">
+    <div style = "width:100%; height:100%">
+      <div style = "height:100%; width:20%; float:left;"></div>
+      <div style = "height:100%; width:20%; float:right;"></div>
+      <div style = "height:50px; width:60%; float:left; text-align:center; font-size:x-large; color: white;">CEF Browser Gui Sample</div>
+
+      <div><textarea rows="2" class="woocommerce-Input woocommerce-Input--text input-text" id="UserTextBox" style = "width:60%; float:left;" placeholder="Type some text to pass to T3D..."></textarea></div>
+
+      <div style = "height:20px; width:60%; float:left;"></div>
+      <div style = "height:40px; width:60%; float:left;">
+        <input type="range" id="ValSlider" style = "width:85%; float:left;" min="-100" max="100" step="1" value="50"></input>
+        <div id="SliderOutput" style="width:10%; font-size:large; color: white; float:right;">50</div>
+      </div>
+
+      <div style = "height:10px; width:60%; float:left;"></div>
+      <div style ="font-size:large; color: white;">
+        <input type="checkbox" id="BoolTestBox" value="1"></input> Boolean input test
+      </div>
+
+      <div style = "height:10px; width:60%; float:left;"></div>
+      <div style ="font-size:large; color: white;">
+        <input type="number" id="FloatTestBox" step="0.01" value="0.00"></input> Float Value
+      </div>
+
+      <div style = "height:10px; width:60%; float:left;"></div>
+      <div style ="font-size:large; color: white;">
+        <select id = "Peeps" name="peeps">
+          <option value="Artist">Artist</option>
+          <option value="Designer">Designer</option>
+          <option value="Programmer">Programmer</option>
+          <option value="End User">End User</option>
+          <option value="Beta Tester">Beta Tester</option>
+        </select>
+      </div>
+
+      <div style = "height:20px; width:60%; float:left;"></div>
+      <div><button class="mybutton" id="MainDemoButton" style ="width:40%; font-size:x-large; float:left;" onClick="DemoButtonClicked();">Send To TorqueScript</button></div>
+
+      <div style = "height:20px; width:60%; float:left;"></div>
+      <video id="video1" name="video1" style="height:216px; width:384px; overflow: hidden;"></video>
+
+    </div>
+  </body>
+  <script type="text/javascript" src="keyDemo.js" charset="UTF-8"></script>
+</html>
