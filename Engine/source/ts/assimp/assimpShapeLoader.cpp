@@ -205,6 +205,7 @@ void AssimpShapeLoader::enumerateScene()
          extractTexture(i, mScene->mTextures[i]);
 
       // Load all the materials.
+      AssimpAppMaterial::sDefaultMatNumber = 0;
       for ( U32 i = 0; i < mScene->mNumMaterials; i++ )
          AppMesh::appMaterials.push_back(new AssimpAppMaterial(mScene->mMaterials[i]));
 

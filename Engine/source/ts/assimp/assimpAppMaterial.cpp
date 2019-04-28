@@ -34,6 +34,8 @@
 #include <assimp/postprocess.h>
 #include <assimp/types.h>
 
+U32 AssimpAppMaterial::sDefaultMatNumber = 0;
+
 String AppMaterial::cleanString(const String& str)
 {
    String cleanStr(str);
@@ -67,8 +69,10 @@ AssimpAppMaterial::AssimpAppMaterial(aiMaterial* mtl) :
    name = matName.C_Str();
    if (name.isEmpty())
    {
-      name = cleanString(TSShapeLoader::getShapePath().getFileName());;
+      name = cleanString(TSShapeLoader::getShapePath().getFileName());
       name += "_defMat";
+      name += String::ToString("%d", sDefaultMatNumber);
+      sDefaultMatNumber++;
    }
    Con::printf("[ASSIMP] Loading Material: %s", name.c_str());
 #ifdef TORQUE_DEBUG
