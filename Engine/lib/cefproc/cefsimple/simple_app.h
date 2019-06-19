@@ -42,15 +42,17 @@ private:
 class TorqueV8Handler : public CefV8Handler {
 private:
    CefRefPtr<CefBrowser> browser;
+   CefRefPtr<CefFrame> frame;
 
 public:
-   TorqueV8Handler(CefRefPtr<CefBrowser> initB) { browser = initB; }
+   TorqueV8Handler(CefRefPtr<CefBrowser> initB, CefRefPtr<CefFrame> initF) { browser = initB; frame = initF; }
 
    virtual bool Execute(const CefString& name,
       CefRefPtr<CefV8Value> object,
       const CefV8ValueList& arguments,
       CefRefPtr<CefV8Value>& retval,
-      CefString& exception) OVERRIDE {
+      CefString& exception) OVERRIDE
+   {
       if (name == "execTS") {
 
          CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("TorqueScript");
@@ -69,7 +71,7 @@ public:
                args->SetBool(i, arguments[i]->GetBoolValue());
          }
 
-         browser->SendProcessMessage(PID_BROWSER, msg);
+         frame->SendProcessMessage(PID_BROWSER, msg);
          // Return true to JS.
          retval = CefV8Value::CreateBool(true);
          //LOG(WARNING) << "TorqueV8Handler::Execute() returning true.";

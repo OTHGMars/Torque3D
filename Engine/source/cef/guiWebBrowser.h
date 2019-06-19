@@ -47,6 +47,7 @@ public:
    CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
 
    bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
       CefProcessId source_process,
       CefRefPtr<CefProcessMessage> message) OVERRIDE;
 

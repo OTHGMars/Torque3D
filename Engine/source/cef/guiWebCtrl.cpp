@@ -210,7 +210,7 @@ bool GuiWebCtrl::createBrowser(const char *startUrl)
    window_info.SetAsWindowless((unsigned long)window->getSystemWindow(PlatformWindow::WindowSystem_X11));
 #endif
 
-   mBrowser = CefBrowserHost::CreateBrowserSync(window_info, mBrowserClient.get(), startUrl, browserSettings, nullptr);
+   mBrowser = CefBrowserHost::CreateBrowserSync(window_info, mBrowserClient.get(), startUrl, browserSettings, nullptr, nullptr);
    return true;
 }
 

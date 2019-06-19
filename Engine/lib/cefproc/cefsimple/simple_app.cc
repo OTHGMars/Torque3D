@@ -22,7 +22,7 @@ void SimpleApp::OnContextCreated(CefRefPtr<CefBrowser> browser,
    CefRefPtr<CefV8Value> object = context->GetGlobal();
 
    // Create an instance of my CefV8Handler object.
-   CefRefPtr<CefV8Handler> handler = new TorqueV8Handler(browser);
+   CefRefPtr<CefV8Handler> handler = new TorqueV8Handler(browser, frame);
 
    // JavaScript to TorqueScript bridge handler.
    // Create the "execTS" function.
