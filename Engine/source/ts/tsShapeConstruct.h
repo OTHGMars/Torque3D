@@ -169,6 +169,7 @@ protected:
    static String smCapsuleShapePath;
    static String smCubeShapePath;
    static String smSphereShapePath;
+   static bool smChangeSetOnly;
 
    static bool addSequenceFromField( void *obj, const char *index, const char *data );
    
@@ -211,6 +212,7 @@ public:
 
    bool writeField(StringTableEntry fieldname, const char *value);
    void writeChangeSet();
+   void loadChangeList();
 
    void notifyShapeChanged();
 
@@ -369,7 +371,12 @@ public:
       /* Initialise change set command (may or may not be added) */                             \
       TSShapeConstructor::ChangeSet::Command newCmd( #name );                                   \
       newCmd.addArgs rawArgs ;                                                                  \
-      TORQUE_UNUSED(newCmd);
+      TORQUE_UNUSED(newCmd);                                                                    \
+      if (TSShapeConstructor::smChangeSetOnly)                                                  \
+      {                                                                                         \
+         mChangeSet.add( newCmd );                                                              \
+         return defRet;                                                                         \
+      }
 
 
 /* This macro just hides the name of the auto-created ChangeSet::Command from

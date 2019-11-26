@@ -76,6 +76,7 @@ TSShape::TSShape()
 
    mUseDetailFromScreenError = false;
    mNeedReinit = false;
+   mFinalShape = false;
 
    mDetailLevelLookup.setSize( 1 );
    mDetailLevelLookup[0].set( -1, 0 );
@@ -2106,6 +2107,7 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
    // Execute the shape script if it exists
    Torque::Path scriptPath(path);
    scriptPath.setExtension("cs");
+   bool hasScriptFile = Torque::FS::IsFile(scriptPath);
 
    // Don't execute the script if we're already doing so!
    StringTableEntry currentScript = Platform::stripBasePath(CodeBlock::getCurrentCodeBlockFullPath());
@@ -2114,7 +2116,7 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
       Torque::Path scriptPathDSO(scriptPath);
       scriptPathDSO.setExtension("cs.dso");
 
-      if (Torque::FS::IsFile(scriptPathDSO) || Torque::FS::IsFile(scriptPath))
+      if (Torque::FS::IsFile(scriptPathDSO) || hasScriptFile)
       {
          String evalCmd = "exec(\"" + scriptPath + "\");";
 
@@ -2129,6 +2131,44 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
    TSShape * ret = 0;
    bool readSuccess = false;
    const String extension = path.getExtension();
+
+   // If we have a .dtf that's newer than the source art AND script file, we're safe to load it.
+   Torque::Path dtfPath(path);
+   dtfPath.setExtension("dtf");
+   FileTime dtfModifyTime;
+   bool noDTF = Con::getBoolVariable("$TSShape::noDTF", false);
+   if (!noDTF && Platform::getFileTimes(dtfPath.getFullPath(), NULL, &dtfModifyTime))
+   {
+      FileTime sourceModifyTime;
+      if (!Platform::getFileTimes(path.getFullPath(), NULL, &sourceModifyTime) ||
+         (Platform::compareFileTimes(dtfModifyTime, sourceModifyTime) >= 0))
+      {  // Source file not found, or dtf is newer
+         FileTime scriptModifyTime;
+         if (!hasScriptFile || !Platform::getFileTimes(scriptPath.getFullPath(), NULL, &scriptModifyTime) ||
+            (Platform::compareFileTimes(dtfModifyTime, scriptModifyTime) >= 0))
+         {  // Script file not found, or dtf is newer. Load the .dtf
+            FileStream stream;
+            stream.open(dtfPath.getFullPath(), Torque::FS::File::Read);
+            if (stream.getStatus() != Stream::Ok)
+            {
+               Con::errorf("Resource<TSShape>::create - Could not open '%s'", dtfPath.getFullPath().c_str());
+               return NULL;
+            }
+
+            ret = new TSShape;
+            readSuccess = ret->read(&stream);
+            if (!readSuccess)
+            {
+               Con::errorf("Resource<TSShape>::create - Error reading '%s'", dtfPath.getFullPath().c_str());
+               delete ret;
+               return NULL;
+            }
+
+            ret->mFinalShape = true;
+            return ret;
+         }
+      }
+   }
 
    if ( extension.equal( "dts", String::NoCase ) )
    {

@@ -85,6 +85,7 @@ EndImplementEnumType;
 String TSShapeConstructor::smCapsuleShapePath("tools/shapes/unit_capsule.dts");
 String TSShapeConstructor::smCubeShapePath("tools/shapes/unit_cube.dts");
 String TSShapeConstructor::smSphereShapePath("tools/shapes/unit_sphere.dts");
+bool TSShapeConstructor::smChangeSetOnly = false;
 
 ResourceRegisterPostLoadSignal< TSShape > TSShapeConstructor::_smAutoLoad( &TSShapeConstructor::_onTSShapeLoaded );
 ResourceRegisterUnloadSignal< TSShape > TSShapeConstructor::_smAutoUnload( &TSShapeConstructor::_onTSShapeUnloaded );
@@ -98,6 +99,22 @@ void TSShapeConstructor::_onTSShapeLoaded( Resource< TSShape >& resource )
    if (ctor && ctor->mShape && ctor->mShape->needsReinit())
    {
       ctor->mShape->init();
+   }
+
+   TSShape *shape = resource;
+   if (!shape->mFinalShape && !Con::getBoolVariable("$TSShape::noDTF", false))
+   {  // Save a .dtf for faster loading next time
+      Torque::Path cachedPath(resource.getPath());
+      cachedPath.setExtension("dtf");
+      FileStream dtsStream;
+      if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
+      {
+#ifdef DEBUG_SPEW
+         Con::printf("Writing cached shape to %s", cachedPath.getFullPath().c_str());
+#endif
+         shape->write(&dtsStream);
+         dtsStream.close();
+      }
    }
 }
 
@@ -502,7 +519,9 @@ void TSShapeConstructor::_onLoad(TSShape* shape)
    }
 
    // Call script function
-   onLoad_callback();
+   if (!mShape->mFinalShape)
+      onLoad_callback();
+
    mLoadingShape = false;
 }
 
@@ -544,6 +563,14 @@ bool TSShapeConstructor::writeField(StringTableEntry fieldname, const char *valu
    }
 
    return Parent::writeField( fieldname, value );
+}
+
+void TSShapeConstructor::loadChangeList()
+{
+   smChangeSetOnly = true;
+   mChangeSet.clear();
+   onLoad_callback();
+   smChangeSetOnly = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -768,6 +795,21 @@ DefineTSShapeConstructorMethod( writeChangeSet, void, (),,
    }
 
    delete stream;
+
+   if (!Con::getBoolVariable("$TSShape::noDTF", false))
+   {
+      Torque::Path cachedPath(mShapePath);
+      cachedPath.setExtension("dtf");
+      FileStream dtsStream;
+      if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
+      {
+#ifdef DEBUG_SPEW
+         Con::printf("Writing cached shape to %s", cachedPath.getFullPath().c_str());
+#endif
+         mShape->write(&dtsStream);
+         dtsStream.close();
+      }
+   }
 }}
 
 DefineTSShapeConstructorMethod( notifyShapeChanged, void, (),,

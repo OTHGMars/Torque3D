@@ -368,6 +368,7 @@ class TSShape
    S32 mReadVersion;          ///< File version that this shape was read from.
    U32 mFlags;                ///< hasTranslucancy
    U32 data;                  ///< User-defined data storage.
+   bool mFinalShape;          ///< Was loaded from .dtf, no TSShapeConstructor needed.
 
    /// If enabled detail selection will use the
    /// legacy screen error method for lod.

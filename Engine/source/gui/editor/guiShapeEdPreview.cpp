@@ -34,6 +34,7 @@
 #include "gfx/primBuilder.h"
 #include "gfx/gfxDrawUtil.h"
 #include "collision/concretePolyList.h"
+#include "ts/tsShapeConstruct.h"
 
 #ifdef TORQUE_COLLADA
    #include "collision/optimizedPolyList.h"
@@ -361,6 +362,18 @@ bool GuiShapeEdPreview::setObjectModel(const char* modelName)
       AssertFatal( mModel, avar("GuiShapeEdPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName ));
 
       TSShape* shape = mModel->getShape();
+
+      // If the shape was loaded from a dtf, load the TSShapeConstructor change list.
+      if (shape->mFinalShape)
+      {  // Force the TSShapeConstructor to load the changelist
+         String fileName(modelName);
+         TSShapeConstructor* tsSC = TSShapeConstructor::findShapeConstructor(fileName);
+         if (tsSC)
+         {
+            tsSC->loadChangeList();
+         }
+         shape->mFinalShape = false;
+      }
 
       // Initialize camera values:
       mOrbitPos = shape->center;
