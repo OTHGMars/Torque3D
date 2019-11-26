@@ -4,6 +4,15 @@
 
 function inputTest::create( %this )
 {
+}
+
+function inputTest::destroy( %this )
+{
+   
+}
+
+function inputTest::initClient( %this )
+{
    exec("./scripts/customProfiles.cs");
    exec("./scripts/inputMonitor.cs");
    exec("./scripts/gui/inputMonitor.gui");
@@ -65,11 +74,6 @@ function inputTest::create( %this )
 
       MMTestContainer.add(%testBtn);
    }
-}
-
-function inputTest::destroy( %this )
-{
-   
 }
 
 function onSDLDeviceConnected(%sdlIndex, %deviceName, %deviceType)
