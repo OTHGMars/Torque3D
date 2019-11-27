@@ -111,7 +111,7 @@ void WebURLRequest::parseLine(U8* buffer, size_t * start, size_t bufferLen)
    for (i = *start; i < bufferLen; i++)
       if (buffer[i] == '\n' || buffer[i] == 0)
          break;
-   U32 len = i - *start;
+   size_t len = i - *start;
 
    if (i == bufferLen || mBuffer)
    {
@@ -355,7 +355,7 @@ void WebURLRequest::onDownloadData(const void* data, size_t data_length)
 
    if (mOutputStream)
    {
-      mOutputStream->write(data_length, data);
+      mOutputStream->write((U32) data_length, data);
    }
    else
    {

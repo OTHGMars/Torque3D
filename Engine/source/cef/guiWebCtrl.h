@@ -68,6 +68,7 @@ protected:
    DECLARE_CALLBACK(void, onLoadingStateChange, (bool isLoading, bool canGoBack, bool canGoForward));
    DECLARE_CALLBACK(void, onLoadError, (S32 errorCode, const char* errorText, const char* failedURL));
    DECLARE_CALLBACK(void, onControlModeChange, (bool isKeyboardMouse));
+   DECLARE_CALLBACK(bool, onPopupRequested, (const char* url, S32 width, S32 height));
 
 public:
    DECLARE_CONOBJECT(GuiWebCtrl);
@@ -129,6 +130,7 @@ public:
    void pageStop();
    void onLoadingStateChange(bool isLoading, bool canGoBack, bool canGoForward);
    void onLoadError(S32 errorCode, const char* errorText, const char* failedURL);
+   bool onPopupRequest(const char* url, S32 width, S32 height);
    void setFrameRate(U32 fps);
    void setZoomLevel(F32 zoomLevel);
 

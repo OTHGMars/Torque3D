@@ -4,8 +4,105 @@
 
 function webCtrlDemo::create( %this )
 {
+   %this.startupCEF();
+   if (!UI.isMethod("initClient"))
+      %this.initClient();
+}
+
+function webCtrlDemo::destroy( %this )
+{
+   
+}
+
+function webCtrlDemo::toggleDemo( %this )
+{
+   if (WebDemoDlg.isAwake())
+      $GameCanvas.popDialog(WebDemoDlg);
+   else
+      $GameCanvas.pushDialog(WebDemoDlg);
+}
+
+function webCtrlDemo::toggleBrowser( %this )
+{
+   if (WebBrowserGui.isAwake())
+      $GameCanvas.popDialog(WebBrowserGui);
+   else
+   {
+      WebBrowserGui-->DemoCEFBrowser.loadURL("torque3d.org");
+      $GameCanvas.pushDialog(WebBrowserGui);
+   }
+}
+
+function webCtrlDemo::toggleURLTester( %this )
+{
+   if (WebURLGui.isAwake())
+      $GameCanvas.popDialog(WebURLGui);
+   else
+      $GameCanvas.pushDialog(WebURLGui);
+}
+
+function webCtrlDemo::startupCEF( %this )
+{
+   // Location for web cache files. Default is "cef/webcache". "" will disable
+   // cache write. Cef will need write permission to this directory.
+   //$Cef::cachePath = getUserPath() @ "/webcache";
+   $Cef::cachePath = "cef/webcache";
+
+   // The locale string that will be passed to Blink. If empty the default locale
+   // of "en - US" will be used. This value is ignored on Linux where locale is
+   // determined using environment variable parsing with the precedence order:
+   // LANGUAGE, LC_ALL, LC_MESSAGES and LANG. Locale files are located in 
+   // game/cef/locales
+   $Cef::localeString = "";
+
+   // The directory and file name to use for the debug log. If empty, the default
+   // name of "debug.log" will be used and the file will be written to the
+   // application directory.  Cef will need write permission to this file.
+   //$Cef::logPath = getUserPath() @ "/cef.log";
+   $Cef::logPath = "cef/cef.log";
+
+   // The log severity. Only messages of this severity level or higher will be
+   // logged. Options are: Default, Verbose, Info, Warning, Error and None
+   $Cef::logSeverity = "Warning";
+
+   // The fully qualified path for the resources directory. If this value is empty
+   // the cef.pak and/or devtools_resources.pak files must be located in the module
+   // directory on Windows/Linux or the app bundle Resources directory on Mac OS X.
+   $Cef::resourcePath = getMainDotCsDir() @ "/cef";
+
+   // The fully qualified path for the locales directory. If this value is empty the
+   // locales directory must be located in the module directory. This value is ignored
+   // on Mac OS X where pack files are always loaded from the app bundle Resources directory.
+   $Cef::localesPath = getMainDotCsDir() @ "/cef/locales";
+
+  // Value that will be returned as the User-Agent HTTP header. If empty the
+  // default User-Agent string will be used.
+  // default: "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+   $Cef::userAgent = "Torque3D 3.10";
+
+   // Now that the values are set, start the cef process.
+   WebEngine::initializeCEF();
+
+   %this.loadControllerMap();
+}
+
+function webCtrlDemo::loadControllerMap( %this )
+{  // Map navigation keys to gamepad events for controller navigation
+   WebEngine::mapDeviceEvent("gamepad", "btn_r", "tab");
+   WebEngine::mapDeviceEvent("gamepad", "btn_l", "shift tab");
+   WebEngine::mapDeviceEvent("gamepad", "btn_b", "enter");
+   WebEngine::mapDeviceEvent("gamepad", "btn_a", "space");
+   WebEngine::mapDeviceEvent("gamepad", "upov", "up");
+   WebEngine::mapDeviceEvent("gamepad", "dpov", "down");
+   WebEngine::mapDeviceEvent("gamepad", "lpov", "left");
+   WebEngine::mapDeviceEvent("gamepad", "rpov", "right");
+   WebEngine::mapDeviceEvent("gamepad", "btn_back", "GoBack");
+   WebEngine::mapDeviceEvent("gamepad", "btn_start", "GoForward");
+}
+
+function webCtrlDemo::initClient( %this )
+{
    exec("./scripts/customProfiles.cs");
-   exec("./scripts/webCursors.cs");
    exec("./scripts/demoGui.cs");
    exec("./scripts/gui/demoGui.gui");
    exec("./scripts/browserGui.cs");
@@ -116,91 +213,6 @@ function webCtrlDemo::create( %this )
       MMTestContainer.add(%urlBtn);
    }
 
-   %this.startupCEF();
-}
-
-function webCtrlDemo::destroy( %this )
-{
-   
-}
-
-function webCtrlDemo::toggleDemo( %this )
-{
-   if (WebDemoDlg.isAwake())
-      $GameCanvas.popDialog(WebDemoDlg);
-   else
-      $GameCanvas.pushDialog(WebDemoDlg);
-}
-
-function webCtrlDemo::toggleBrowser( %this )
-{
-   if (WebBrowserGui.isAwake())
-      $GameCanvas.popDialog(WebBrowserGui);
-   else
-      $GameCanvas.pushDialog(WebBrowserGui);
-}
-
-function webCtrlDemo::toggleURLTester( %this )
-{
-   if (WebURLGui.isAwake())
-      $GameCanvas.popDialog(WebURLGui);
-   else
-      $GameCanvas.pushDialog(WebURLGui);
-}
-
-function webCtrlDemo::startupCEF( %this )
-{
-   // Location for web cache files. Default is "cef/webcache". "" will disable
-   // cache write. Cef will need write permission to this directory.
-   //$Cef::cachePath = getUserPath() @ "/webcache";
-   $Cef::cachePath = "cef/webcache";
-
-   // The locale string that will be passed to Blink. If empty the default locale
-   // of "en - US" will be used. This value is ignored on Linux where locale is
-   // determined using environment variable parsing with the precedence order:
-   // LANGUAGE, LC_ALL, LC_MESSAGES and LANG. Locale files are located in 
-   // game/cef/locales
-   $Cef::localeString = "";
-
-   // The directory and file name to use for the debug log. If empty, the default
-   // name of "debug.log" will be used and the file will be written to the
-   // application directory.  Cef will need write permission to this file.
-   //$Cef::logPath = getUserPath() @ "/cef.log";
-   $Cef::logPath = "cef/cef.log";
-
-   // The log severity. Only messages of this severity level or higher will be
-   // logged. Options are: Default, Verbose, Info, Warning, Error and None
-   $Cef::logSeverity = "Warning";
-
-   // The fully qualified path for the resources directory. If this value is empty
-   // the cef.pak and/or devtools_resources.pak files must be located in the module
-   // directory on Windows/Linux or the app bundle Resources directory on Mac OS X.
-   $Cef::resourcePath = getMainDotCsDir() @ "/cef";
-
-   // The fully qualified path for the locales directory. If this value is empty the
-   // locales directory must be located in the module directory. This value is ignored
-   // on Mac OS X where pack files are always loaded from the app bundle Resources directory.
-   $Cef::localesPath = getMainDotCsDir() @ "/cef/locales";
-
-   // Now that the values are set, start the cef process.
-   WebEngine::initializeCEF();
-
    // Convert our local html path
    WebDemoControl.StartURL = "file:///" @ getMainDotCsDir() @ "/data/webCtrlDemo/html/demoTestGui.html";
-   
-   %this.loadControllerMap();
-}
-
-function webCtrlDemo::loadControllerMap( %this )
-{  // Map navigation keys to gamepad events for controller navigation
-   WebEngine::mapDeviceEvent("gamepad", "btn_r", "tab");
-   WebEngine::mapDeviceEvent("gamepad", "btn_l", "shift tab");
-   WebEngine::mapDeviceEvent("gamepad", "btn_b", "enter");
-   WebEngine::mapDeviceEvent("gamepad", "btn_a", "space");
-   WebEngine::mapDeviceEvent("gamepad", "upov", "up");
-   WebEngine::mapDeviceEvent("gamepad", "dpov", "down");
-   WebEngine::mapDeviceEvent("gamepad", "lpov", "left");
-   WebEngine::mapDeviceEvent("gamepad", "rpov", "right");
-   WebEngine::mapDeviceEvent("gamepad", "btn_back", "GoBack");
-   WebEngine::mapDeviceEvent("gamepad", "btn_start", "GoForward");
 }

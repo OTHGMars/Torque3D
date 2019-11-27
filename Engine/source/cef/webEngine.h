@@ -84,6 +84,7 @@ protected:
    static StringTableEntry mCachePath;
    static StringTableEntry mLocaleStr;
    static StringTableEntry mLogFile;
+   static StringTableEntry mUserAgent;
    static S32 mLogSeverity;
    static StringTableEntry mResourcePath;
    static StringTableEntry mLocalesPath;

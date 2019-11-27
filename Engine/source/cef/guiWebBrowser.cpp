@@ -115,3 +115,29 @@ void GuiWebBrowser::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFram
    if (mBrowserGui)
       ((GuiWebCtrl*)mBrowserGui)->onLoadError((S32) errorCode, errorStr.c_str(), errorURL.c_str());
 }
+
+// CefLifeSpanHandler methods:
+//------------------------------------------------------------------------------
+bool GuiWebBrowser::OnBeforePopup(CefRefPtr<CefBrowser> browser,
+   CefRefPtr<CefFrame> frame,
+   const CefString& target_url,
+   const CefString& target_frame_name,
+   WindowOpenDisposition target_disposition,
+   bool user_gesture,
+   const CefPopupFeatures& popupFeatures,
+   CefWindowInfo& windowInfo,
+   CefRefPtr<CefClient>& client,
+   CefBrowserSettings& settings,
+   CefRefPtr<CefDictionaryValue>& extra_info,
+   bool* no_javascript_access)
+{
+   String URL = target_url.c_str();
+   if (mBrowserGui)
+   {
+      S32 width = popupFeatures.widthSet ? popupFeatures.width : 0;
+      S32 height = popupFeatures.heightSet ? popupFeatures.height : 0;
+      return ((GuiWebCtrl*)mBrowserGui)->onPopupRequest(URL.c_str(), width, height);
+   }
+
+   return false;
+}

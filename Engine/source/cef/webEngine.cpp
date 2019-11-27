@@ -78,6 +78,7 @@ WebEngine *gWebEngine = NULL;
 StringTableEntry WebEngine::mCachePath = StringTable->insert("cef/webcache");
 StringTableEntry WebEngine::mLocaleStr = StringTable->EmptyString();
 StringTableEntry WebEngine::mLogFile = StringTable->insert("cef/webcache");
+StringTableEntry WebEngine::mUserAgent = StringTable->EmptyString();
 S32 WebEngine::mLogSeverity = WebEngine::LogModeType::ModeWarning;
 StringTableEntry WebEngine::mResourcePath = StringTable->EmptyString();
 StringTableEntry WebEngine::mLocalesPath = StringTable->insert("cef/locales");
@@ -136,6 +137,9 @@ bool WebEngine::init()
    Con::addVariable("$Cef::logPath", TypeString, &mLogFile,
       "The directory and file name to use for the debug log. If empty, the default name "
       "of \"debug.log\" will be used and the file will be written to the application directory.\n");
+
+   Con::addVariable("$Cef::userAgent", TypeString, &mUserAgent,
+      "Value that will be returned as the User-Agent HTTP header. If empty the default User-Agent string will be used.\n");
 
    Con::addVariable("$Cef::logSeverity", TYPEID< LogModeType >(), &mLogSeverity,
       "The log severity. Only messages of this severity level or higher will be logged. "
@@ -199,6 +203,7 @@ bool WebEngine::initCef()
    CefString(&settings.locale).FromASCII(mLocaleStr);
    CefString(&settings.resources_dir_path).FromASCII(mResourcePath);
    CefString(&settings.locales_dir_path).FromASCII(mLocalesPath);
+   CefString(&settings.user_agent).FromASCII(mUserAgent);
    settings.remote_debugging_port = mRemoteDebuggingPort;
 
    // Initialize CEF in the main process.

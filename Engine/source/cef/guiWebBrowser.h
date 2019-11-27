@@ -26,7 +26,7 @@
 
 class GuiControl;
 class GuiWebRender;
-class GuiWebBrowser : public CefClient, public CefLoadHandler
+class GuiWebBrowser : public CefClient, public CefLoadHandler, public CefLifeSpanHandler
 {
 private:
    enum Constants {
@@ -45,6 +45,7 @@ public:
    // CefClient methods:
    virtual CefRefPtr<CefRenderHandler> GetRenderHandler() { return m_renderHandler; }
    CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
+   CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
 
    bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
@@ -69,12 +70,50 @@ public:
    // error text and |failedUrl| is the URL that failed to load.
    // See net\base\net_error_list.h for complete descriptions of the error codes.
    ///
-   /*--cef(optional_param=errorText)--*/
    void OnLoadError(CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
       ErrorCode errorCode,
       const CefString& errorText,
       const CefString& failedUrl) OVERRIDE;
+
+   // CefLifeSpanHandler methods:
+   ///
+   // Called on the UI thread before a new popup browser is created. The
+   // |browser| and |frame| values represent the source of the popup request. The
+   // |target_url| and |target_frame_name| values indicate where the popup
+   // browser should navigate and may be empty if not specified with the request.
+   // The |target_disposition| value indicates where the user intended to open
+   // the popup (e.g. current tab, new tab, etc). The |user_gesture| value will
+   // be true if the popup was opened via explicit user gesture (e.g. clicking a
+   // link) or false if the popup opened automatically (e.g. via the
+   // DomContentLoaded event). The |popupFeatures| structure contains additional
+   // information about the requested popup window. To allow creation of the
+   // popup browser optionally modify |windowInfo|, |client|, |settings| and
+   // |no_javascript_access| and return false. To cancel creation of the popup
+   // browser return true. The |client| and |settings| values will default to the
+   // source browser's values. If the |no_javascript_access| value is set to
+   // false the new browser will not be scriptable and may not be hosted in the
+   // same renderer process as the source browser. Any modifications to
+   // |windowInfo| will be ignored if the parent browser is wrapped in a
+   // CefBrowserView. Popup browser creation will be canceled if the parent
+   // browser is destroyed before the popup browser creation completes (indicated
+   // by a call to OnAfterCreated for the popup browser). The |extra_info|
+   // parameter provides an opportunity to specify extra information specific
+   // to the created popup browser that will be passed to
+   // CefRenderProcessHandler::OnBrowserCreated() in the render process.
+   ///
+   virtual bool OnBeforePopup(CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      const CefString& target_url,
+      const CefString& target_frame_name,
+      WindowOpenDisposition target_disposition,
+      bool user_gesture,
+      const CefPopupFeatures& popupFeatures,
+      CefWindowInfo& windowInfo,
+      CefRefPtr<CefClient>& client,
+      CefBrowserSettings& settings,
+      CefRefPtr<CefDictionaryValue>& extra_info,
+      bool* no_javascript_access);
 
    IMPLEMENT_REFCOUNTING(GuiWebBrowser);
 };

@@ -57,6 +57,15 @@ IMPLEMENT_CALLBACK(GuiWebCtrl, onControlModeChange, void, (bool isKeyboardMouse)
    "@param isKeyboardMouse True if the most recent input event came from a keyboard or mouse device. "
    "False if the most recent event was from any other device (joystick, gamepad, ovrdevice...etc.).");
 
+IMPLEMENT_CALLBACK(GuiWebCtrl, onPopupRequested, bool, (const char* url, S32 width, S32 height),
+   (url, width, height),
+   "Called when the user clicks on a link that tries to open in a new tab or window. Return true "
+   "from this callback to prevent the OS level window from opening. Return false to let cef open "
+   "an external browser window to handle the request.\n"
+   "@param url The requested url.\n"
+   "@param width Window width if included with the request, otherwise 0.\n"
+   "@param height Window height if included with the request, otherwise 0.\n");
+
 //------------------------------------------------------------------------------
 GuiWebCtrl::GuiWebCtrl()
 :  mWebRenderer(NULL),
@@ -963,6 +972,11 @@ void GuiWebCtrl::onLoadingStateChange(bool isLoading, bool canGoBack, bool canGo
 void GuiWebCtrl::onLoadError(S32 errorCode, const char* errorText, const char* failedURL)
 {
    onLoadError_callback(errorCode, errorText, failedURL);
+}
+
+bool GuiWebCtrl::onPopupRequest(const char* url, S32 width, S32 height)
+{
+   return onPopupRequested_callback(url, width, height);
 }
 
 void GuiWebCtrl::setFrameRate(U32 fps)
