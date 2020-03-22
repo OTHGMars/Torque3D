@@ -682,6 +682,17 @@ DefineEngineFunction(getWorkingDirectory, String, (),,
    return Platform::getCurrentDirectory();
 }
 
+DefineEngineFunction(fileToObjectID, String, (const char* fileName), ,
+   "@brief Get the file name cleaned so that it's a valid Torque identifier name.\n\n"
+
+   "@param fileName Name and path of file to check\n"
+   "@return Cleaned string suitable for object names.\n"
+   "@ingroup FileSystem")
+{
+   Torque::Path tmpPath(fileName);
+   return tmpPath.fileToObjectID();
+}
+
 //-----------------------------------------------------------------------------
 
 // [tom, 5/1/2007] I changed these to be ordinary console functions as they

@@ -261,6 +261,22 @@ String Path::Join(const String& a,String::ValueType s,const String& b)
    return a + s + b;
 }
 
+String Path::fileToObjectID()
+{
+   String cleanStr(mFile);
+
+   // Replace invalid characters with underscores
+   const String badChars(" -,.+=*/[]%$~;:");
+   for (String::SizeType i = 0; i < badChars.length(); i++)
+      cleanStr.replace(badChars[i], '_');
+
+   // Prefix with an underscore if string starts with a number
+   if ((cleanStr[0] >= '0') && (cleanStr[0] <= '9'))
+      cleanStr.insert(0, '_');
+
+   return cleanStr;
+}
+
 bool Path::appendPath( const Path &p )
 {
    mPath = CompressPath(Join(mPath,'/',p.getPath()));

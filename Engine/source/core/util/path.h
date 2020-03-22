@@ -117,7 +117,7 @@ public:
    /// path component. The object's root, filename and
    /// extension are unaffected.
    bool appendPath(const Path &path);
-
+   String fileToObjectID();
 private:
    String   mRoot;
    String   mPath;

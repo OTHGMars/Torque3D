@@ -242,9 +242,7 @@ function ShapeEditor::findConstructor( %this, %path )
 
 function ShapeEditor::createConstructor( %this, %path )
 {
-   %name = strcapitalise( fileBase( %path ) ) @ strcapitalise( getSubStr( fileExt( %path ), 1, 3 ) );
-   %name = strreplace( %name, "-", "_" );
-   %name = strreplace( %name, ".", "_" );
+   %name = fileToObjectID( %path ) @ strcapitalise( getSubStr( fileExt( %path ), 1, 3 ) );
    %name = getUniqueName( %name );
    return new TSShapeConstructor( %name ) { baseShape = %path; };
 }
