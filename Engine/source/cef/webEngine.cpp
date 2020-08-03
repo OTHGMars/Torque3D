@@ -75,13 +75,15 @@ EndImplementEnumType;
 
 //------------------------------------------------------------------------------
 WebEngine *gWebEngine = NULL;
-StringTableEntry WebEngine::mCachePath = StringTable->insert("cef/webcache");
+StringTableEntry WebEngine::mRootCachePath = StringTable->EmptyString();
+StringTableEntry WebEngine::mCachePath = StringTable->EmptyString();
+StringTableEntry WebEngine::mUserDataPath = StringTable->EmptyString();
 StringTableEntry WebEngine::mLocaleStr = StringTable->EmptyString();
-StringTableEntry WebEngine::mLogFile = StringTable->insert("cef/webcache");
+StringTableEntry WebEngine::mLogFile = StringTable->EmptyString();
 StringTableEntry WebEngine::mUserAgent = StringTable->EmptyString();
 S32 WebEngine::mLogSeverity = WebEngine::LogModeType::ModeWarning;
 StringTableEntry WebEngine::mResourcePath = StringTable->EmptyString();
-StringTableEntry WebEngine::mLocalesPath = StringTable->insert("cef/locales");
+StringTableEntry WebEngine::mLocalesPath = StringTable->EmptyString();
 S32 WebEngine::mRemoteDebuggingPort = 0;
 
 #if defined TORQUE_OS_WIN
@@ -122,11 +124,33 @@ bool WebEngine::init()
    // Build our key mapping arrays
    _buildKeyMaps();
 
+   Con::addVariable("$Cef::rootCachePath", TypeString, &mRootCachePath,
+      "The root directory that all CefSettings.cache_path and "
+      "CefRequestContextSettings.cache_path values must have in common. If this "
+      "value is empty and CefSettings.cache_path is non-empty then it will "
+      "default to the CefSettings.cache_path value. If this value is non-empty "
+      "then it must be an absolute path. Failure to set this value correctly may "
+      "result in the sandbox blocking read/write access to the cache_path "
+      "directory.\n");
+
    Con::addVariable("$Cef::cachePath", TypeString, &mCachePath,
-      "The location where cache data will be stored on disk. If empty an in-memory "
-      "cache will be used for some features and a temporary disk cache will be used "
-      "for others. HTML5 databases such as localStorage will only persist across "
-      "sessions if a cache path is specified.\n");
+      "The location where data for the global browser cache will be stored on "
+      "disk. If this value is non-empty then it must be an absolute path that is "
+      "either equal to or a child directory of CefSettings.root_cache_path. If "
+      "this value is empty then browsers will be created in \"incognito mode\" where "
+      "in-memory caches are used for storage and no data is persisted to disk. "
+      "HTML5 databases such as localStorage will only persist across sessions if a "
+      "cache path is specified. Can be overridden for individual CefRequestContext "
+      "instances via the CefRequestContextSettings.cache_path value.\n");
+
+   Con::addVariable("$Cef::userDataPath", TypeString, &mUserDataPath,
+      "The location where user data such as spell checking dictionary files will "
+      "be stored on disk. If this value is empty then the default "
+      "platform-specific user data directory will be used (\"~/.cef_user_data\" "
+      "directory on Linux, \"~/Library/Application Support/CEF/User Data\" directory "
+      "on Mac OS X, \"Local Settings/Application Data/CEF/User Data\" directory "
+      "under the user profile directory on Windows). If this value is non-empty "
+      "then it must be an absolute path.\n");
 
    Con::addVariable("$Cef::localeString", TypeString, &mLocaleStr,
       "The locale string that will be passed to Blink. If empty the default locale of "
@@ -186,12 +210,15 @@ bool WebEngine::initCef()
    // Clear the log from the last run
    removeCefLogFile();
 
+   // Locate the sub-process executable
+   char exePath[MAX_PATH];
+   dSprintf(exePath, MAX_PATH, "%s/%s", Platform::getMainDotCsDir(), mSubProcessPath);
+
    // Populate this structure to customize CEF behavior.
    CefSettings settings;
-   CefString(&settings.browser_subprocess_path).FromASCII(mSubProcessPath);
+   CefString(&settings.browser_subprocess_path).FromASCII(exePath);
    settings.command_line_args_disabled = true;
    settings.no_sandbox = true;
-   //settings.single_process = false;
    settings.multi_threaded_message_loop = false;
    settings.external_message_pump = true;
    settings.windowless_rendering_enabled = true;
@@ -199,7 +226,9 @@ bool WebEngine::initCef()
    settings.log_severity = (cef_log_severity_t) mLogSeverity;
    CefString(&settings.log_file).FromASCII(mLogFile);
 
+   CefString(&settings.root_cache_path).FromASCII(mRootCachePath);
    CefString(&settings.cache_path).FromASCII(mCachePath);
+   CefString(&settings.user_data_path).FromASCII(mUserDataPath);
    CefString(&settings.locale).FromASCII(mLocaleStr);
    CefString(&settings.resources_dir_path).FromASCII(mResourcePath);
    CefString(&settings.locales_dir_path).FromASCII(mLocalesPath);

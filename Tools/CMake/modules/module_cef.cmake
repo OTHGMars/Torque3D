@@ -71,7 +71,7 @@ if( WIN32 )
     INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libcef.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
     INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libEGL.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
     INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libGLESv2.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
-    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/natives_blob.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
+    #INSTALL(FILES "${TORQUE_CEF_PATH}/Release/natives_blob.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
     INSTALL(FILES "${TORQUE_CEF_PATH}/Release/snapshot_blob.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
     INSTALL(FILES "${TORQUE_CEF_PATH}/Release/v8_context_snapshot.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
 

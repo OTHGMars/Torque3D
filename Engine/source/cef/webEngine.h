@@ -81,7 +81,9 @@ private:
 
 protected:
    static StringTableEntry mSubProcessPath;
+   static StringTableEntry mRootCachePath;
    static StringTableEntry mCachePath;
+   static StringTableEntry mUserDataPath;
    static StringTableEntry mLocaleStr;
    static StringTableEntry mLogFile;
    static StringTableEntry mUserAgent;
