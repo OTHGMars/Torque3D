@@ -67,13 +67,12 @@ if( WIN32 )
     addLibSrc("${CMAKE_CURRENT_SOURCE_DIR}/libraries/cefproc.cmake")
 
     # Install files
-    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/chrome_elf.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
-    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libcef.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
-    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libEGL.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
-    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libGLESv2.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
-    #INSTALL(FILES "${TORQUE_CEF_PATH}/Release/natives_blob.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
-    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/snapshot_blob.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
-    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/v8_context_snapshot.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Release")
+    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/chrome_elf.dll" DESTINATION "${projectOutDir}")
+    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libcef.dll" DESTINATION "${projectOutDir}")
+    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libEGL.dll" DESTINATION "${projectOutDir}")
+    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/libGLESv2.dll" DESTINATION "${projectOutDir}")
+    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/snapshot_blob.bin" DESTINATION "${projectOutDir}")
+    INSTALL(FILES "${TORQUE_CEF_PATH}/Release/v8_context_snapshot.bin" DESTINATION "${projectOutDir}")
 
     # Because the debug libraries and bin files have identical names, we only install release.
     # If you need step through debugging of the chromium libs, you'll need the following files.
@@ -82,7 +81,6 @@ if( WIN32 )
     #INSTALL(FILES "${TORQUE_CEF_PATH}/Debug/libcef.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Debug")
     #INSTALL(FILES "${TORQUE_CEF_PATH}/Debug/libEGL.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Debug")
     #INSTALL(FILES "${TORQUE_CEF_PATH}/Debug/libGLESv2.dll" DESTINATION "${projectOutDir}" CONFIGURATIONS "Debug")
-    #INSTALL(FILES "${TORQUE_CEF_PATH}/Debug/natives_blob.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Debug")
     #INSTALL(FILES "${TORQUE_CEF_PATH}/Debug/snapshot_blob.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Debug")
     #INSTALL(FILES "${TORQUE_CEF_PATH}/Debug/v8_context_snapshot.bin" DESTINATION "${projectOutDir}" CONFIGURATIONS "Debug")
 endif()
@@ -130,5 +128,14 @@ file(GLOB_RECURSE CEFLOCALE_FILES_AND_DIRS "${TORQUE_CEF_PATH}/Resources/locales
 foreach(ITEM ${CEFLOCALE_FILES_AND_DIRS})
     get_filename_component( dir ${ITEM} DIRECTORY )
     STRING(REGEX REPLACE "${TORQUE_CEF_PATH}/Resources/locales" "${projectOutDir}/cef/locales/" INSTALL_DIR ${dir})
+    install( FILES ${ITEM} DESTINATION ${INSTALL_DIR} )
+endforeach()
+
+# Install the webDemo module
+file(GLOB_RECURSE WEBDEMO_FILES_AND_DIRS "${CMAKE_SOURCE_DIR}/Templates/Modules/webCtrlDemo/*")
+
+foreach(ITEM ${WEBDEMO_FILES_AND_DIRS})
+    get_filename_component( dir ${ITEM} DIRECTORY )
+    STRING(REGEX REPLACE "${CMAKE_SOURCE_DIR}/Templates/Modules/webCtrlDemo" "${projectOutDir}/data/webCtrlDemo/" INSTALL_DIR ${dir})
     install( FILES ${ITEM} DESTINATION ${INSTALL_DIR} )
 endforeach()

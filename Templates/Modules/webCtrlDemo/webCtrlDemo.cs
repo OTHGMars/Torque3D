@@ -50,8 +50,8 @@ function webCtrlDemo::startupCEF( %this )
    // then it must be an absolute path. Failure to set this value correctly may
    // result in the sandbox blocking read/write access to the cache_path
    // directory. Cef will need write permission to this directory.
-   //$Cef::rootCachePath = getUserPath() @ "cef/webcache";
-   $Cef::rootCachePath = "";
+   $Cef::rootCachePath = getUserPath() @ "/cef/webcache";
+   //$Cef::rootCachePath = "";
 
    // The location where data for the global browser cache will be stored on
    // disk. If this value is non-empty then it must be an absolute path that is
@@ -62,8 +62,8 @@ function webCtrlDemo::startupCEF( %this )
    // cache path is specified. Can be overridden for individual CefRequestContext
    // instances via the CefRequestContextSettings.cache_path value.
    // Cef will need write permission to this directory.
-   //$Cef::cachePath = getUserPath() @ "/webcache";
-   $Cef::cachePath = getMainDotCsDir() @ "/cef/webcache";
+   $Cef::cachePath = getUserPath() @ "/cef/webcache";
+   //$Cef::cachePath = getMainDotCsDir() @ "/cef/webcache";
 
    // The location where user data such as spell checking dictionary files will
    // be stored on disk. If this value is empty then the default
@@ -73,8 +73,8 @@ function webCtrlDemo::startupCEF( %this )
    // under the user profile directory on Windows). If this value is non-empty
    // then it must be an absolute path. Cef will need write permission to this
    // directory.
-   //$Cef::userDataPath = getUserPath() @ "/cef/data";
-   $Cef::userDataPath = getMainDotCsDir() @ "/cef/data";
+   $Cef::userDataPath = getUserPath() @ "/cef/data";
+   //$Cef::userDataPath = getMainDotCsDir() @ "/cef/data";
 
    // The locale string that will be passed to Blink. If empty the default locale
    // of "en - US" will be used. This value is ignored on Linux where locale is
@@ -137,7 +137,7 @@ function webCtrlDemo::initClient( %this )
    exec("./scripts/gui/browserGui.gui");
    exec("./scripts/urlRequest.cs");
    exec("./scripts/urlTest.cs");
-   exec("./scripts/gui/urlTester.gui");
+   exec("./scripts/gui/urltester.gui");
    exec("./scripts/gui/headerTemplate.gui");
 
    if (isObject(MainMenuGui))

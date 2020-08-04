@@ -17,7 +17,7 @@ Pull https://github.com/OTHGMars/Torque3D/tree/CEFPlugin into your local branch.
    * Configure and generate your project.
    * Build the solution in VS. Be sure to also build the INSTALL project, as it will copy the binaries and resources needed by cef into your game directory.
 
-3. Start using html guis. For a quick-start, copy the webCtrlDemo directory from Templates/Modules to your game/data directory.
+3. Start using html guis. The install scripts copied the webCtrlDemo Module to your game/data directory. The demo provides gui based examples of interaction with the GuiWebCtrl and WebURLRequest objects.
 
 
 ## Linux

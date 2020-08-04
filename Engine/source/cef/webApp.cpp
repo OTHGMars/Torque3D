@@ -110,7 +110,7 @@ bool ClientSchemeHandler::ReadResponse(void* data_out, int bytes_to_read,
    Torque::FS::FileRef dataFile = Torque::FS::OpenFile(file_path_, Torque::FS::File::Read);
    if (dataFile != NULL)
    {
-      dataFile->setPosition(offset_, Torque::FS::File::Begin);
+      dataFile->setPosition((U32) offset_, Torque::FS::File::Begin);
       bytes_read = dataFile->read(data_out, bytes_to_read);
       dataFile->close();
 

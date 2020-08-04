@@ -211,8 +211,8 @@ bool WebEngine::initCef()
    removeCefLogFile();
 
    // Locate the sub-process executable
-   char exePath[MAX_PATH];
-   dSprintf(exePath, MAX_PATH, "%s/%s", Platform::getMainDotCsDir(), mSubProcessPath);
+   char exePath[1024];
+   dSprintf(exePath, 1024, "%s/%s", Platform::getMainDotCsDir(), mSubProcessPath);
 
    // Populate this structure to customize CEF behavior.
    CefSettings settings;
